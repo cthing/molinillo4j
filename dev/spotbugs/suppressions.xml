@@ -1,0 +1,18 @@
+<FindBugsFilter>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+    <Match>
+        <Bug pattern="FCCD_FIND_CLASS_CIRCULAR_DEPENDENCY"/>
+    </Match>
+    <Match>
+        <Bug pattern="NP_NONNULL_RETURN_VIOLATION"/>
+        <Class name="~.*(Tag|SetPayload)"/>
+    </Match>
+    <Match>
+        <Class name="~.*Test(\$.+)?"/>
+    </Match>
+</FindBugsFilter>
