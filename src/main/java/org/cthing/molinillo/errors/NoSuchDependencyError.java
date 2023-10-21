@@ -30,11 +30,14 @@ public class NoSuchDependencyError extends ResolverError {
      * @param requiredBy The dependents
      */
     public NoSuchDependencyError(final Object dependency, final Set<Object> requiredBy) {
-        super("Unable to find a specification for '"
+        super("Unable to find a specification for "
                       + dependency
                       + (requiredBy.isEmpty()
-                         ? "'"
-                         : "' depended upon by "
-                                 + requiredBy.stream().map(Object::toString).collect(Collectors.joining(" and "))));
+                         ? ""
+                         : " depended upon by "
+                                 + requiredBy.stream()
+                                             .map(Object::toString)
+                                             .sorted()
+                                             .collect(Collectors.joining(" and "))));
     }
 }

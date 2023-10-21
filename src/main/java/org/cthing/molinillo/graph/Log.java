@@ -34,6 +34,26 @@ public class Log<P, R> implements Iterable<Action<P, R, ?>> {
     }
 
     /**
+     * Undoes the log to the specified tag.
+     *
+     * @param graph Dependency graph on which to undo the actions.
+     *
+     * @param tagValue Value for the tag marking the point to which the graph should be undone.
+     */
+    public void rewindTo(final DependencyGraph<P, R> graph, final Object tagValue) {
+        final Tag<P, R> tag = new Tag<>(tagValue);
+        while (true) {
+            final Action<P, R, ?> action = pop(graph);
+            if (action == null) {
+                throw new IllegalStateException("No tag " + tagValue + " found");
+            }
+            if ((action instanceof Tag) && action.equals(tag)) {
+                break;
+            }
+        }
+    }
+
+    /**
      * Adds the specified vertex to the dependency graph for possible undo. If a vertex with the specified name
      * already exists in the graph, it is updated with the new payload and root flag.
      *
@@ -106,38 +126,6 @@ public class Log<P, R> implements Iterable<Action<P, R, ?>> {
                 return tmp;
             }
         };
-    }
-
-    /**
-     * Undoes the log to the specified tag.
-     *
-     * @param graph Dependency graph on which to undo the actions.
-     *
-     * @param tagValue Value for the tag marking the point to which the graph should be undone.
-     */
-    public void rewindTo(final DependencyGraph<P, R> graph, final Object tagValue) {
-        final Tag<P, R> tag = new Tag<>(tagValue);
-        while (true) {
-            final Action<P, R, ?> action = pop(graph);
-            if (action == null) {
-                throw new IllegalStateException("No tag " + tagValue + " found");
-            }
-            if ((action instanceof Tag) && action.equals(tag)) {
-                break;
-            }
-        }
-    }
-
-    /**
-     * Undoes the last action in the log.
-     *
-     * @param graph Dependency graph on which to undo the actions.
-     */
-    public void rewindLast(final DependencyGraph<P, R> graph) {
-        final Action<P, R, ?> action = pop(graph);
-        if (action == null) {
-            throw new IllegalStateException("No action to rewind");
-        }
     }
 
     /**

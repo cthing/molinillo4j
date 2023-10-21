@@ -34,7 +34,16 @@ public class DependencyGraph<P, R> {
      * Constructs an empty dependency graph.
      */
     public DependencyGraph() {
-        this.log = new Log<>();
+        this(new Log<>());
+    }
+
+    /**
+     * Constructs an empty dependency graph. This constructor is for testing purposes.
+     *
+     * @param log Action log to record changes to the graph
+     */
+    public DependencyGraph(final Log<P, R> log) {
+        this.log = log;
         this.vertices = new HashMap<>();
     }
 
@@ -45,6 +54,15 @@ public class DependencyGraph<P, R> {
      */
     public Map<String, Vertex<P, R>> getVertices() {
         return this.vertices;
+    }
+
+    /**
+     * Indicates if the dependency graph does not contain any vertices.
+     *
+     * @return {@code true} if the dependency graph does not contain any vertices.
+     */
+    public boolean isEmpty() {
+        return this.vertices.isEmpty();
     }
 
     /**
@@ -67,16 +85,7 @@ public class DependencyGraph<P, R> {
     }
 
     /**
-     * Undoes the last modification of the dependency graph. This method is used for testing purposes.
-     *
-     * @throws IllegalStateException if the log is empty
-     */
-    public void rewindLast() {
-        this.log.rewindLast(this);
-    }
-
-    /**
-     * Adds a vertex as a child of the specified parent vertices.
+     * Adds a vertex as a child of the specified parent (i.e. predecessor) vertices.
      *
      * @param name Name for the new vertex
      * @param payload Payload placed on the new vertex
@@ -186,28 +195,32 @@ public class DependencyGraph<P, R> {
      */
     @VisibilityForTesting
     List<Vertex<P, R>> path(final Vertex<P, R> from, final Vertex<P, R> to) {
-        final Map<String, Integer> distances = new HashMap<>(this.vertices.size() + 1);
+        final Map<String, Integer> distances = new HashMap<>();
         distances.put(from.getName(), 0);
 
+        final int defaultDistance = this.vertices.size() + 1;
         final Map<Vertex<P, R>, Vertex<P, R>> predecessors = new HashMap<>();
-        this.vertices.values().forEach(vertex -> vertex.successors().forEach(successor -> {
-            if (distances.get(successor.getName()) > distances.get(vertex.getName() + 1)) {
-                distances.put(successor.getName(), distances.get(vertex.getName()) + 1);
-                predecessors.put(successor, vertex);
-            }
-        }));
+        this.vertices.values().forEach(vertex -> {
+            final int vertexDistance = distances.getOrDefault(vertex.getName(), defaultDistance) + 1;
+            vertex.successors().forEach(successor -> {
+                if (distances.getOrDefault(successor.getName(), defaultDistance) > vertexDistance) {
+                    distances.put(successor.getName(), vertexDistance);
+                    predecessors.put(successor, vertex);
+                }
+            });
+        });
 
         final List<Vertex<P, R>> path = new ArrayList<>();
-        path.add(to);
         Vertex<P, R> destination = to;
-        Vertex<P, R> before = predecessors.get(destination);
-        while (before != null) {
-            path.add(before);
-            destination = before;
+
+        while (destination != null) {
+            path.add(destination);
+
             if (destination.equals(from)) {
                 break;
             }
-            before = predecessors.get(destination);
+
+            destination = predecessors.get(destination);
         }
 
         if (!path.get(path.size() - 1).equals(from)) {
@@ -243,7 +256,7 @@ public class DependencyGraph<P, R> {
 
     @Override
     public String toString() {
-        return "DependencyGraph: vertices=" + this.vertices.size();
+        return "DependencyGraph { vertices=" + this.vertices.size() + " }";
     }
 
     @Override

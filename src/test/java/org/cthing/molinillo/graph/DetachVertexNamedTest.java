@@ -63,6 +63,8 @@ public class DetachVertexNamedTest {
 
         final DetachVertexNamed<String, String> detachAction = new DetachVertexNamed<>(vertexC.getName());
 
+        graph.tag("start");
+
         final List<Vertex<String, String>> removedVertices = detachAction.up(graph);
         assertThat(removedVertices).containsExactlyInAnyOrder(vertexC, vertexD);
         assertThat(graph.getVertices()).contains(entry(vertexA.getName(), vertexA));
@@ -84,7 +86,7 @@ public class DetachVertexNamedTest {
         // log needed to be popped to undo the second action. This is why cyclic coupling across three classes
         // leads to testing challenges (in this case the need to interact with the action log).
         detachAction.down(graph);
-        graph.rewindLast();
+        graph.rewindTo("start");
         assertThat(graph.getVertices()).contains(entry(vertexA.getName(), vertexA));
         assertThat(graph.getVertices()).contains(entry(vertexB.getName(), vertexB));
         assertThat(graph.getVertices()).contains(entry(vertexC.getName(), vertexC));
