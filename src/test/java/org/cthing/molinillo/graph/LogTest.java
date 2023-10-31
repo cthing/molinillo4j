@@ -78,8 +78,8 @@ public class LogTest {
 
         final Edge<String, String> edge3 = this.log.addEdgeNoCircular(this.graph, "vertex2", "vertex3", "req");
         assertThat(vertex2.getIncomingEdges()).containsExactly(edge1);
-        assertThat(vertex2.getOutgoingEdges()).containsExactlyInAnyOrder(edge3);
-        assertThat(vertex3.getIncomingEdges()).containsExactly(edge2, edge3);
+        assertThat(vertex2.getOutgoingEdges()).containsExactly(edge3);
+        assertThat(vertex3.getIncomingEdges()).containsExactlyInAnyOrder(edge2, edge3);
         assertThat(vertex3.getOutgoingEdges()).isEmpty();
 
         this.log.rewindTo(this.graph, "tag3");

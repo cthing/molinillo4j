@@ -124,7 +124,7 @@ public class Vertex<P, R> {
      * @return Requirements of this vertex and all incoming edges.
      */
     public Set<R> requirements() {
-        final Stream<R> requirements1 = this.incomingEdges.stream().map(Edge::requirement);
+        final Stream<R> requirements1 = this.incomingEdges.stream().map(Edge::getRequirement);
         final Stream<R> requitements2 = this.explicitRequirements.stream();
         return Stream.concat(requirements1, requitements2).collect(Collectors.toSet());
     }
@@ -135,7 +135,7 @@ public class Vertex<P, R> {
      * @return All vertices pointing to this vertex.
      */
     public Set<Vertex<P, R>> predecessors() {
-        return this.incomingEdges.stream().map(Edge::origin).collect(Collectors.toSet());
+        return this.incomingEdges.stream().map(Edge::getOrigin).collect(Collectors.toSet());
     }
 
     /**
@@ -144,7 +144,7 @@ public class Vertex<P, R> {
      * @return All vertices pointed to by this vertex.
      */
     public Set<Vertex<P, R>> successors() {
-        return this.outgoingEdges.stream().map(Edge::destination).collect(Collectors.toSet());
+        return this.outgoingEdges.stream().map(Edge::getDestination).collect(Collectors.toSet());
     }
 
     /**

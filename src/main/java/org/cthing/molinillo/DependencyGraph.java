@@ -92,11 +92,10 @@ public class DependencyGraph<P, R> {
      * @param parentNames The name of one or more parents for the new vertex.
      * @param requirement Requirement for the edges from the parent to the new vertex
      * @return Newly created vertex
-     * @throws CircularDependencyError if adding the vertex will cause a cycle in the dependency graph
      * @throws IllegalArgumentException if no parent vertices are specified
      */
     public Vertex<P, R> addChildVertex(final String name, final P payload, final List<String> parentNames,
-                                       final R requirement) throws CircularDependencyError {
+                                       final R requirement) {
         if (parentNames.isEmpty()) {
             throw new IllegalArgumentException("Parent vertices must be specified");
         }
@@ -151,10 +150,8 @@ public class DependencyGraph<P, R> {
      * @param destination Edge destination vertex
      * @param requirement Requirement to place on the edge
      * @return Added edge
-     * @throws CircularDependencyError if adding the edge will cause a cycle in the dependency graph
      */
-    public Edge<P, R> addEdge(final Vertex<P, R> origin, final Vertex<P, R> destination, final R requirement)
-            throws CircularDependencyError {
+    public Edge<P, R> addEdge(final Vertex<P, R> origin, final Vertex<P, R> destination, final R requirement) {
         if (destination.pathTo(origin)) {
             throw new CircularDependencyError(path(destination, origin));
         }
@@ -245,9 +242,9 @@ public class DependencyGraph<P, R> {
             final Vertex<P, R> vertex = vertexEntry.getValue();
             dotVertices.add(String.format("%s [label=\"{%s|%s}\"]", name, name, vertex.getPayload()));
             for (final Edge<P, R> edge : vertex.getOutgoingEdges()) {
-                final String label = edge.requirement().toString();
-                dotEdges.add(String.format("  %s -> %s [label=%s]", edge.origin().getName(),
-                                           edge.destination().getName(), label));
+                final String label = edge.getRequirement().toString();
+                dotEdges.add(String.format("  %s -> %s [label=%s]", edge.getOrigin().getName(),
+                                           edge.getDestination().getName(), label));
             }
         }
 

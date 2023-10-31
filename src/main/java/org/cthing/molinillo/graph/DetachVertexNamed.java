@@ -56,7 +56,7 @@ public class DetachVertexNamed<P, R> extends Action<P, R, List<Vertex<P, R>>> {
         removedVertices.add(this.vertex);
 
         this.vertex.getOutgoingEdges().forEach(edge -> {
-            final Vertex<P, R> v = edge.destination();
+            final Vertex<P, R> v = edge.getDestination();
             v.getIncomingEdges().remove(edge);
             if (!v.isRoot() && v.getIncomingEdges().isEmpty()) {
                 removedVertices.addAll(graph.detachVertexNamed(v.getName()));
@@ -64,7 +64,7 @@ public class DetachVertexNamed<P, R> extends Action<P, R, List<Vertex<P, R>>> {
         });
 
         this.vertex.getIncomingEdges().forEach(edge -> {
-            final Vertex<P, R> v = edge.origin();
+            final Vertex<P, R> v = edge.getOrigin();
             v.getOutgoingEdges().remove(edge);
         });
 
@@ -78,8 +78,8 @@ public class DetachVertexNamed<P, R> extends Action<P, R, List<Vertex<P, R>>> {
         }
 
         graph.getVertices().put(this.vertex.getName(), this.vertex);
-        this.vertex.getOutgoingEdges().forEach(edge -> edge.destination().getIncomingEdges().add(edge));
-        this.vertex.getIncomingEdges().forEach(edge -> edge.origin().getOutgoingEdges().add(edge));
+        this.vertex.getOutgoingEdges().forEach(edge -> edge.getDestination().getIncomingEdges().add(edge));
+        this.vertex.getIncomingEdges().forEach(edge -> edge.getOrigin().getOutgoingEdges().add(edge));
     }
 
     @Override

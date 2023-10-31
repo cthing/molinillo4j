@@ -13,6 +13,10 @@
         <Class name="~.*(Tag|SetPayload)"/>
     </Match>
     <Match>
+        <Bug pattern="PSC_PRESIZE_COLLECTIONS"/>
+        <Class name="~.*Resolution"/>
+    </Match>
+    <Match>
         <Class name="~.*Test(\$.+)?"/>
     </Match>
 </FindBugsFilter>

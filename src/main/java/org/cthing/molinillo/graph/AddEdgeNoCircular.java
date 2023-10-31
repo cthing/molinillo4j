@@ -60,16 +60,16 @@ public class AddEdgeNoCircular<P, R> extends Action<P, R, Edge<P, R>> {
     @Override
     public Edge<P, R> up(final DependencyGraph<P, R> graph) {
         final Edge<P, R> edge = makeEdge(graph);
-        edge.origin().getOutgoingEdges().add(edge);
-        edge.destination().getIncomingEdges().add(edge);
+        edge.getOrigin().getOutgoingEdges().add(edge);
+        edge.getDestination().getIncomingEdges().add(edge);
         return edge;
     }
 
     @Override
     public void down(final DependencyGraph<P, R> graph) {
         final Edge<P, R> edge = makeEdge(graph);
-        edge.origin().getOutgoingEdges().remove(edge);
-        edge.destination().getIncomingEdges().remove(edge);
+        edge.getOrigin().getOutgoingEdges().remove(edge);
+        edge.getDestination().getIncomingEdges().remove(edge);
     }
 
     /**

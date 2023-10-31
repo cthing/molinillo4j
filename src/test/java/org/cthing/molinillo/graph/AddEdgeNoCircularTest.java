@@ -46,8 +46,8 @@ public class AddEdgeNoCircularTest {
 
         final AddEdgeNoCircular<String, String> edgeAction = new AddEdgeNoCircular<>("start", "end", "req1");
         final Edge<String, String> edge = edgeAction.up(graph);
-        assertThat(edge.origin()).isEqualTo(origin);
-        assertThat(edge.destination()).isEqualTo(destination);
+        assertThat(edge.getOrigin()).isEqualTo(origin);
+        assertThat(edge.getDestination()).isEqualTo(destination);
         assertThat(origin.getOutgoingEdges()).containsExactly(edge);
         assertThat(destination.getIncomingEdges()).containsExactly(edge);
 
