@@ -36,9 +36,10 @@ java {
 dependencies {
     implementation(libs.jsr305)
 
+    testImplementation(libs.assertJ)
+    testImplementation(libs.equalsVerifier)
     testImplementation(libs.junitApi)
     testImplementation(libs.junitParams)
-    testImplementation(libs.assertJ)
 
     testRuntimeOnly(libs.junitEngine)
     testRuntimeOnly(libs.junitLauncher)

@@ -2,6 +2,8 @@ package org.cthing.molinillo.graph;
 
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -20,19 +22,10 @@ public class EdgeTest {
 
     @Test
     public void testEquality() {
-        final Vertex<String, String> origin = new Vertex<>("start", "payload1");
-        final Vertex<String, String> destination = new Vertex<>("end", "payload2");
-
-        final Edge<String, String> edge1 = new Edge<>(origin, destination, "req");
-        final Edge<String, String> edge2 = new Edge<>(origin, destination, "req");
-        final Edge<String, String> edge3 = new Edge<>(origin, destination, "req2");
-        final Edge<String, String> edge4 = new Edge<>(destination, origin, "req");
-
-        assertThat(edge1).isEqualTo(edge2);
-        assertThat(edge1).hasSameHashCodeAs(edge2);
-        assertThat(edge1).isNotEqualTo(edge3);
-        assertThat(edge1).doesNotHaveSameHashCodeAs(edge3);
-        assertThat(edge1).isNotEqualTo(edge4);
-        assertThat(edge1).doesNotHaveSameHashCodeAs(edge4);
+        EqualsVerifier.forClass(Edge.class)
+                      .usingGetClass()
+                      .withPrefabValues(Vertex.class, new Vertex<String, String>("abc", "def"),
+                                        new Vertex<String, String>("lmn", "xyz"))
+                      .verify();
     }
 }

@@ -6,6 +6,9 @@ import java.util.Map;
 import org.cthing.molinillo.DependencyGraph;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -21,14 +24,13 @@ public class DetachVertexNamedTest {
 
     @Test
     public void testEquality() {
-        final DetachVertexNamed<String, String> detachAction1 = new DetachVertexNamed<>("abc");
-        final DetachVertexNamed<String, String> detachAction2 = new DetachVertexNamed<>("abc");
-        final DetachVertexNamed<String, String> detachAction3 = new DetachVertexNamed<>("def");
-
-        assertThat(detachAction1).isEqualTo(detachAction2);
-        assertThat(detachAction1).hasSameHashCodeAs(detachAction2);
-        assertThat(detachAction1).isNotEqualTo(detachAction3);
-        assertThat(detachAction1).doesNotHaveSameHashCodeAs(detachAction3);
+        EqualsVerifier.forClass(DetachVertexNamed.class)
+                      .usingGetClass()
+                      .withPrefabValues(Action.class, new TestAction(), new TestAction())
+                      .withPrefabValues(Vertex.class, new Vertex<String, String>("abc", "def"),
+                                        new Vertex<String, String>("lmn", "xyz"))
+                      .suppress(Warning.ALL_FIELDS_SHOULD_BE_USED)
+                      .verify();
     }
 
     @Test

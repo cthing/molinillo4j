@@ -3,10 +3,15 @@ package org.cthing.molinillo;
 import java.util.List;
 
 import org.cthing.molinillo.errors.CircularDependencyError;
+import org.cthing.molinillo.graph.Action;
 import org.cthing.molinillo.graph.Edge;
+import org.cthing.molinillo.graph.TestAction;
 import org.cthing.molinillo.graph.Vertex;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -245,18 +250,13 @@ public class DependencyGraphTest {
 
     @Test
     public void testEquality() {
-        final DependencyGraph<String, String> graph1 = new DependencyGraph<>();
-        graph1.addVertex("A", "", true);
-        final DependencyGraph<String, String> graph2 = new DependencyGraph<>();
-        graph2.addVertex("A", "", true);
-        final DependencyGraph<String, String> graph3 = new DependencyGraph<>();
-        graph3.addVertex("B", "", true);
-        final DependencyGraph<String, String> graph4 = new DependencyGraph<>();
-        graph4.addVertex("A", "payload", true);
-
-        assertThat(graph1).isEqualTo(graph2);
-        assertThat(graph1).isNotEqualTo(graph3);
-        assertThat(graph1).isNotEqualTo(graph4);
+        EqualsVerifier.forClass(DependencyGraph.class)
+                      .usingGetClass()
+                      .withPrefabValues(Action.class, new TestAction(), new TestAction())
+                      .withPrefabValues(Vertex.class, new Vertex<String, String>("abc", "def"),
+                                        new Vertex<String, String>("lmn", "xyz"))
+                      .suppress(Warning.ALL_FIELDS_SHOULD_BE_USED)
+                      .verify();
     }
 
     @Nested

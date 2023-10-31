@@ -3,6 +3,9 @@ package org.cthing.molinillo.graph;
 import org.cthing.molinillo.DependencyGraph;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -17,25 +20,12 @@ public class SetPayloadTest {
     }
 
     @Test
-    @SuppressWarnings("AssertBetweenInconvertibleTypes")
     public void testEquality() {
-        final SetPayload<String, String> payloadAction1 = new SetPayload<>("abc", "def");
-        final SetPayload<String, String> payloadAction2 = new SetPayload<>("abc", "def");
-        final SetPayload<String, String> payloadAction3 = new SetPayload<>("xyx", "def");
-        final SetPayload<String, String> payloadAction4 = new SetPayload<>("abc", "xyz");
-        final SetPayload<Integer, String> payloadAction5 = new SetPayload<>("abc", 1234);
-
-        assertThat(payloadAction1).isEqualTo(payloadAction2);
-        assertThat(payloadAction1).hasSameHashCodeAs(payloadAction2);
-
-        assertThat(payloadAction1).isNotEqualTo(payloadAction3);
-        assertThat(payloadAction1).doesNotHaveSameHashCodeAs(payloadAction3);
-
-        assertThat(payloadAction1).isNotEqualTo(payloadAction4);
-        assertThat(payloadAction1).doesNotHaveSameHashCodeAs(payloadAction4);
-
-        assertThat(payloadAction1).isNotEqualTo(payloadAction5);
-        assertThat(payloadAction1).doesNotHaveSameHashCodeAs(payloadAction5);
+        EqualsVerifier.forClass(SetPayload.class)
+                      .usingGetClass()
+                      .withPrefabValues(Action.class, new TestAction(), new TestAction())
+                      .suppress(Warning.ALL_FIELDS_SHOULD_BE_USED)
+                      .verify();
     }
 
     @Test

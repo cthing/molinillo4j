@@ -3,6 +3,9 @@ package org.cthing.molinillo.graph;
 import org.cthing.molinillo.DependencyGraph;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -25,21 +28,11 @@ public class AddVertexTest {
 
     @Test
     public void testEquality() {
-        final AddVertex<String, String> vertexAction1 = new AddVertex<>("abc", "payload1", false);
-        final AddVertex<String, String> vertexAction2 = new AddVertex<>("abc", "payload1", false);
-        final AddVertex<String, String> vertexAction3 = new AddVertex<>("def", "payload1", false);
-        final AddVertex<String, String> vertexAction4 = new AddVertex<>("abc", "payload2", false);
-        final AddVertex<String, String> vertexAction5 = new AddVertex<>("abc", "payload1", true);
-
-        assertThat(vertexAction1).isEqualTo(vertexAction2);
-        assertThat(vertexAction1).hasSameHashCodeAs(vertexAction2);
-
-        assertThat(vertexAction1).isNotEqualTo(vertexAction3);
-        assertThat(vertexAction1).doesNotHaveSameHashCodeAs(vertexAction3);
-        assertThat(vertexAction1).isNotEqualTo(vertexAction4);
-        assertThat(vertexAction1).doesNotHaveSameHashCodeAs(vertexAction4);
-        assertThat(vertexAction1).isNotEqualTo(vertexAction5);
-        assertThat(vertexAction1).doesNotHaveSameHashCodeAs(vertexAction5);
+        EqualsVerifier.forClass(AddVertex.class)
+                      .usingGetClass()
+                      .withPrefabValues(Action.class, new TestAction(), new TestAction())
+                      .suppress(Warning.ALL_FIELDS_SHOULD_BE_USED)
+                      .verify();
     }
 
     @Test
