@@ -488,7 +488,6 @@ public class Resolution<R, S> {
      *
      * @param conflicts Conflicts for the error
      */
-    @SuppressWarnings("unchecked")
     private void raiseErrorUnlessState(final Map<String, Conflict<R, S>> conflicts) {
         if (getState() == null) {
             final Optional<RuntimeException> underlyingError = conflicts.values()
@@ -500,7 +499,7 @@ public class Resolution<R, S> {
             if (underlyingError.isPresent()) {
                 throw underlyingError.get();
             } else {
-                throw new VersionConflictError((Map)conflicts, getSpecificationProvider());
+                throw new VersionConflictError(conflicts, getSpecificationProvider());
             }
         }
     }
@@ -527,7 +526,7 @@ public class Resolution<R, S> {
         }
         final CurrentDetailHolder currentDetailHolder = new CurrentDetailHolder(lastDetailForCurrentUnwind);
 
-        final List<R> allRequirements = lastDetailForCurrentUnwind.getAllRequirements();
+        final List<R> allRequirements = lastDetailForCurrentUnwind.allRequirements();
         final int allRequirementsSize = allRequirements.size();
 
         // Look for past conflicts that could be unwound to affect the requirement tree for the current conflict.
@@ -742,7 +741,7 @@ public class Resolution<R, S> {
                               .toList();
 
         final List<R> requirementsToAvoid = parentUnwinds.stream()
-                                                         .flatMap(uw -> uw.getSubDependenciesToAvoid().stream())
+                                                         .flatMap(uw -> uw.subDependenciesToAvoid().stream())
                                                          .toList();
 
         final ResolutionState<R, S> state = getState();

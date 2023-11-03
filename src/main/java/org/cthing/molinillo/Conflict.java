@@ -110,6 +110,18 @@ public final class Conflict<R, S> {
     }
 
     @Override
+    public String toString() {
+        return "Conflict { requirement=" + this.requirement
+                + ", requirements=" + this.requirements
+                + ", existing=" + this.existing
+                + ", possibilitySet=" + this.possibilitySet
+                + ", lockedRequirement=" + this.lockedRequirement
+                + ", requirementTrees=" + this.requirementTrees
+                + ", activatedByName=" + this.activatedByName
+                + ", underlyingError=" + this.underlyingError + " }";
+    }
+
+    @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
@@ -134,17 +146,5 @@ public final class Conflict<R, S> {
         return Objects.hash(this.requirement, this.requirements, this.existing, this.possibilitySet,
                             this.lockedRequirement, this.requirementTrees, this.activatedByName,
                             this.underlyingError);
-    }
-
-    @Override
-    public String toString() {
-        return "Conflict { requirement=" + this.requirement
-                + ", requirements=" + this.requirements
-                + ", existing=" + this.existing
-                + ", possibilitySet=" + this.possibilitySet
-                + ", lockedRequirement=" + this.lockedRequirement
-                + ", requirementTrees=" + this.requirementTrees
-                + ", activatedByName=" + this.activatedByName
-                + ", underlyingError=" + this.underlyingError + " }";
     }
 }

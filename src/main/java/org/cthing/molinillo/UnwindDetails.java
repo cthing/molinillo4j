@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -117,7 +118,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return Index of the state requirement.
      */
-    public int getReversedRequirementTreeIndex() {
+    public int reversedRequirementTreeIndex() {
         if (this.stateRequirement != null) {
             final List<R> reversedRequirementTree = new ArrayList<>(this.requirementTree);
             Collections.reverse(reversedRequirementTree);
@@ -146,7 +147,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return Sub-dependencies to avoid when choosing a new possibility.
      */
-    public List<R> getSubDependenciesToAvoid() {
+    public List<R> subDependenciesToAvoid() {
         if (this.requirementsToAvoid == null) {
             this.requirementsToAvoid = new ArrayList<>();
             for (final List<R> tree : this.requirementTrees) {
@@ -164,12 +165,11 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return All requirements that led to the need for this unwind.
      */
-    public List<R> getAllRequirements() {
+    public List<R> allRequirements() {
         if (this.allRequirements == null) {
-            this.allRequirements = new ArrayList<>();
-            for (final List<R> tree : this.requirementTrees) {
-                this.allRequirements.addAll(tree);
-            }
+            this.allRequirements = this.requirementTrees.stream()
+                                                        .flatMap(List::stream) // Flatten the list of lists
+                                                        .collect(Collectors.toList());
         }
         return this.allRequirements;
     }
@@ -201,7 +201,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
             return 1;
         }
         if (this.stateIndex == other.stateIndex) {
-            return Integer.compare(this.getReversedRequirementTreeIndex(), other.getReversedRequirementTreeIndex());
+            return Integer.compare(this.reversedRequirementTreeIndex(), other.reversedRequirementTreeIndex());
         }
         return -1;
     }
@@ -217,11 +217,11 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
 
         final UnwindDetails<?, ?> that = (UnwindDetails<?, ?>)obj;
         return this.stateIndex == that.stateIndex
-                && this.getReversedRequirementTreeIndex() == that.getReversedRequirementTreeIndex();
+                && this.reversedRequirementTreeIndex() == that.reversedRequirementTreeIndex();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.stateIndex, this.getReversedRequirementTreeIndex());
+        return Objects.hash(this.stateIndex, this.reversedRequirementTreeIndex());
     }
 }

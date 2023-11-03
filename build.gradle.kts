@@ -40,6 +40,7 @@ dependencies {
     testImplementation(libs.equalsVerifier)
     testImplementation(libs.junitApi)
     testImplementation(libs.junitParams)
+    testImplementation(libs.mockito)
 
     testRuntimeOnly(libs.junitEngine)
     testRuntimeOnly(libs.junitLauncher)

@@ -12,6 +12,7 @@ import org.cthing.molinillo.SpecificationProvider;
 /**
  * Error caused by conflicts between versions of a dependency.
  */
+@SuppressWarnings("unchecked")
 public class VersionConflictError extends ResolverError {
 
     @Serial
@@ -20,11 +21,11 @@ public class VersionConflictError extends ResolverError {
     private final Map<String, Conflict<?, ?>> conflicts;
     private final SpecificationProvider<?, ?> specificationProvider;
 
-    public VersionConflictError(final Map<String, Conflict<?, ?>> conflicts,
-                                final SpecificationProvider<?, ?> specificationProvider) {
+    public <R, S> VersionConflictError(final Map<String, Conflict<R, S>> conflicts,
+                                final SpecificationProvider<R, S> specificationProvider) {
         super("Unable to satisfy the following requirements:\n\n" + buildErrorMessage(conflicts));
 
-        this.conflicts = conflicts;
+        this.conflicts = (Map)conflicts;
         this.specificationProvider = specificationProvider;
     }
 
@@ -35,7 +36,6 @@ public class VersionConflictError extends ResolverError {
      * @param <S> Specification type
      * @return Conflicts that cause the resolution to fail.
      */
-    @SuppressWarnings("unchecked")
     public <R, S> Map<String, Conflict<R, S>> getConflicts() {
         return (Map)this.conflicts;
     }
@@ -47,17 +47,16 @@ public class VersionConflictError extends ResolverError {
      * @param <S> Specification type
      * @return Specification provider used during resolution.
      */
-    @SuppressWarnings("unchecked")
     public <R, S> SpecificationProvider<R, S> getSpecificationProvider() {
         return (SpecificationProvider<R, S>)this.specificationProvider;
     }
 
-    private static String buildErrorMessage(final Map<String, Conflict<?, ?>> conflictMap) {
+    private static <R, S> String buildErrorMessage(final Map<String, Conflict<R, S>> conflictMap) {
         final List<String> pairs = new ArrayList<>();
         conflictMap.values()
                    .forEach(conflict -> conflict.getRequirements()
                                                 .forEach((source, conflictRequirements) -> conflictRequirements
-                                                        .forEach(c -> pairs.add(String.format("- `%s` required by `%s`",
+                                                        .forEach(c -> pairs.add(String.format("- '%s' required by '%s'",
                                                                                               c, source.toString())))));
         return String.join("\n", pairs);
     }
