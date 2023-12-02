@@ -47,7 +47,7 @@ public class ConsoleUI implements UI {
     @Override
     public void debug(final int depth, final String format, final Object... args) {
         if (isDebugMode()) {
-            WRITER.println(":" + depth + ":" + String.format(format, args));
+            WRITER.println(String.format(":%4d: ", depth) + String.format(format, args));
         }
     }
 

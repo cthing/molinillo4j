@@ -1,5 +1,6 @@
 package org.cthing.molinillo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class PossibilityState<R, S> extends ResolutionState<R, S> {
                             final Map<String, Conflict<R, S>> conflicts,
                             final List<UnwindDetails<R, S>> unusedUnwindOptions) {
         super(name, requirements, activated, requirement,
-              (possibility == null) ? List.of() : List.of(possibility),
+              (possibility == null) ? new ArrayList<>() : new ArrayList<>(List.of(possibility)),
               depth, conflicts, unusedUnwindOptions);
     }
 }

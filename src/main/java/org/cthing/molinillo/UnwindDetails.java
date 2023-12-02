@@ -156,6 +156,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
                     this.requirementsToAvoid.add(tree.get(index + 1));
                 }
             }
+            this.requirementsToAvoid.removeIf(Objects::isNull);
         }
         return this.requirementsToAvoid;
     }

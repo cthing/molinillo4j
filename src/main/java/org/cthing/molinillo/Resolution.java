@@ -340,7 +340,7 @@ public class Resolution<R, S> {
 
         pushInitialState();
 
-        debug(-1, "Starting resolution (%s)\nUser-requested dependencies: %s",
+        debug(0, "Starting resolution (%s)\nUser-requested dependencies: %s",
               new SimpleDateFormat(DATE_FORMAT).format(new Date(this.startedAt)), this.originalRequested);
 
         this.resolverUi.beforeResolution();
@@ -378,9 +378,9 @@ public class Resolution<R, S> {
 
         this.resolverUi.afterResolution();
 
-        debug(-1, "Finished resolution (%d steps)", this.iterationCount);
-        debug(-1, "                    (Took %d ms)", endedAt - this.startedAt);
-        debug(-1, "                    (%s)", new SimpleDateFormat(DATE_FORMAT).format(new Date(endedAt)));
+        debug(0, "Finished resolution (%d steps)", this.iterationCount);
+        debug(0, "                    (Took %d ms)", endedAt - this.startedAt);
+        debug(0, "                    (%s)", new SimpleDateFormat(DATE_FORMAT).format(new Date(endedAt)));
 
         final ResolutionState<R, S> state = getState();
         if (state != null) {
@@ -392,8 +392,8 @@ public class Resolution<R, S> {
                                            .map(vertex -> vertex.getPayload().toString())
                                            .collect(Collectors.joining(", "));
 
-            debug(-1, "Unactivated: %s", payloads.apply(Boolean.TRUE));
-            debug(-1, "Activated: %s", payloads.apply(Boolean.FALSE));
+            debug(0, "Unactivated: %s", payloads.apply(Boolean.TRUE));
+            debug(0, "Activated: %s", payloads.apply(Boolean.FALSE));
         }
     }
 
@@ -460,12 +460,14 @@ public class Resolution<R, S> {
         debug(getDepth(), "Unwinding for conflict: %s to %d", getRequirement(), detailsForUnwind.getStateIndex() / 2);
 
         final Map<String, Conflict<R, S>> c = new HashMap<>(getConflicts());
-        final List<ResolutionState<R, S>> slicedStates =
-                new ArrayList<>(this.states.subList(detailsForUnwind.getStateIndex() + 1, this.states.size()));
+        final List<ResolutionState<R, S>> statesToSlice = this.states.subList(detailsForUnwind.getStateIndex() + 1,
+                                                                              this.states.size());
+        final List<ResolutionState<R, S>> slicedStates = new ArrayList<>(statesToSlice);
+        statesToSlice.clear();
         raiseErrorUnlessState(c);
 
         if (!slicedStates.isEmpty()) {
-            getActivated().rewindTo(slicedStates.get(0).getName());
+            getActivated().rewindTo(slicedStates.get(0));
         } else {
             getActivated().rewindTo(INITIAL_STATE);
         }
@@ -816,6 +818,7 @@ public class Resolution<R, S> {
             // to be considered are the initial one (where the dependency's version was first chosen) and the last one.
             result.add(conflict.getRequirement());
             result.add(requirementForExistingName(nameForDependency(conflict.getRequirement())));
+            result.removeIf(Objects::isNull);
         } else {
             // Loop through the possible binding requirements, removing each one that does not bind. Iterate in reverse
             // because we want the earliest set of binding requirements, and refine the array on each iteration.

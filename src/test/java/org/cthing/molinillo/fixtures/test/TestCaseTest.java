@@ -43,7 +43,7 @@ public class TestCaseTest {
 
     @Test
     public void testResolve() {
-        final TestCase testCase = TestCase.fromFixture("simple");
+        final TestCase testCase = TestCase.fromFixture("simple_with_dependencies");
         final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> result =
                 testCase.resolve(TestIndex.class);
         assertThat(result).isEqualTo(testCase.getResult());
