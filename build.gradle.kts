@@ -1,8 +1,7 @@
-import com.github.spotbugs.snom.Effort
 import com.github.spotbugs.snom.Confidence
+import com.github.spotbugs.snom.Effort
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 repositories {
     mavenCentral()
@@ -38,9 +37,11 @@ dependencies {
 
     testImplementation(libs.assertJ)
     testImplementation(libs.equalsVerifier)
+    testImplementation(libs.jacksonDatabind)
     testImplementation(libs.junitApi)
     testImplementation(libs.junitParams)
     testImplementation(libs.mockito)
+    testImplementation(libs.versionParser)
 
     testRuntimeOnly(libs.junitEngine)
     testRuntimeOnly(libs.junitLauncher)
@@ -119,6 +120,12 @@ tasks {
 
     withType<Test> {
         useJUnitPlatform()
+
+        // Provide the test resources directory location to unit tests
+        val resourcesDir: File? = project.sourceSets["test"].output.resourcesDir
+        if (resourcesDir != null) {
+            systemProperty("testResourcesDir", resourcesDir.absolutePath)
+        }
     }
 
     withType<GenerateModuleMetadata> {

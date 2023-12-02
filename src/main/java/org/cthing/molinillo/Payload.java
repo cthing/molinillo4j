@@ -116,10 +116,11 @@ public final class Payload<R, S> {
 
     @Override
     public String toString() {
-        return "Payload { " + ((this.unionType == UnionType.PS)
-                               ? "possibilitySet=" + this.possibilitySet
-                               : "specification=" + this.specification)
-                + " }";
+        if (this.unionType == UnionType.PS) {
+            return (this.possibilitySet == null) ? "null" : this.possibilitySet.toString();
+        } else {
+            return (this.specification == null) ? "null" : this.specification.toString();
+        }
     }
 
     @Override

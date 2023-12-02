@@ -3,8 +3,8 @@ package org.cthing.molinillo;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.cthing.molinillo.graph.Vertex;
@@ -57,17 +57,15 @@ public class AbstractSpecificationProvider<R, S> implements SpecificationProvide
     @Override
     public List<R> sortDependencies(final List<R> dependencies, final DependencyGraph<Payload<R, S>, R> activated,
                                     final Map<String, Conflict<R, S>> conflicts) {
+        final Function<R, Integer> payloadFunction = dep -> {
+            final Vertex<Payload<R, S>, R> vertex = activated.vertexNamed(nameForDependency(dep));
+            return (vertex == null || vertex.getPayload().isEmpty()) ? 1 : 0;
+        };
+        final Function<R, Integer> conflictsFunction = dep -> conflicts.containsKey(nameForDependency(dep)) ? 0 : 1;
+        final Comparator<R> requirementComparator = Comparator.comparing(payloadFunction)
+                                                              .thenComparing(conflictsFunction);
         return dependencies.stream()
-                           .sorted(Comparator.comparing(dependency -> {
-                               final String name = nameForDependency(dependency);
-                               final Optional<Vertex<Payload<R, S>, R>> vertexOptional =
-                                       Optional.ofNullable(activated.vertexNamed(name));
-                               final int activatedCompare =
-                                       vertexOptional.map(v -> (v.getPayload().isEmpty()) ? 1 : 0).orElse(0);
-                               final int conflictsCompare =
-                                       Optional.ofNullable(conflicts.get(name)).map(c -> 0).orElse(1);
-                               return activatedCompare - conflictsCompare;
-                           }))
+                           .sorted(requirementComparator)
                            .collect(Collectors.toList());
     }
 

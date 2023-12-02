@@ -1,8 +1,10 @@
 package org.cthing.molinillo;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -33,6 +36,7 @@ public class Resolution<R, S> {
 
     private static final String SWAP = "SWAP";
     private static final String INITIAL_STATE = "INITIAL_STATE";
+    private static final String DATE_FORMAT = "yyyy.MM.dd HH:mm:ss:SSSZ";
 
     private final SpecificationProvider<R, S> specificationProvider;
     private final UI resolverUi;
@@ -114,7 +118,7 @@ public class Resolution<R, S> {
         try {
             ResolutionState<R, S> state = getState();
             while (state != null) {
-                if (state.getRequirement() != null && state.getRequirements().isEmpty()) {
+                if (state.getRequirement() == null && state.getRequirements().isEmpty()) {
                     break;
                 }
 
@@ -124,7 +128,7 @@ public class Resolution<R, S> {
                     debug(getDepth(), "Creating possibility state for %s (%d remaining)", getRequirement(),
                           getPossibilities().size());
                     final PossibilityState<R, S> possibilityState = dependencyState.popPossibilityState();
-                    this.states.add(0, possibilityState);
+                    this.states.add(possibilityState);
                     getActivated().tag(possibilityState);
                 }
 
@@ -336,7 +340,8 @@ public class Resolution<R, S> {
 
         pushInitialState();
 
-        debug(-1, "Starting resolution (%d)\nUser-requested dependencies: %s", this.startedAt, this.originalRequested);
+        debug(-1, "Starting resolution (%s)\nUser-requested dependencies: %s",
+              new SimpleDateFormat(DATE_FORMAT).format(new Date(this.startedAt)), this.originalRequested);
 
         this.resolverUi.beforeResolution();
     }
@@ -375,22 +380,20 @@ public class Resolution<R, S> {
 
         debug(-1, "Finished resolution (%d steps)", this.iterationCount);
         debug(-1, "                    (Took %d ms)", endedAt - this.startedAt);
-        debug(-1, "                    (%d)", endedAt);
+        debug(-1, "                    (%s)", new SimpleDateFormat(DATE_FORMAT).format(new Date(endedAt)));
 
         final ResolutionState<R, S> state = getState();
         if (state != null) {
-            debug(-1, "Unactivated: %s", getActivated().getVertices()
-                                                       .entrySet()
-                                                       .stream()
-                                                       .filter(entry -> entry.getValue().getPayload().isEmpty())
-                                                       .map(Map.Entry::getKey)
-                                                       .collect(Collectors.joining(", ")));
-            debug(-1, "Activated: ", getActivated().getVertices()
-                                                   .entrySet()
-                                                   .stream()
-                                                   .filter(entry -> !entry.getValue().getPayload().isEmpty())
-                                                   .map(Map.Entry::getKey)
-                                                   .collect(Collectors.joining(", ")));
+            final Function<Boolean, String> payloads =
+                    empty -> getActivated().getVertices()
+                                           .values()
+                                           .stream()
+                                           .filter(vertex -> empty == vertex.getPayload().isEmpty())
+                                           .map(vertex -> vertex.getPayload().toString())
+                                           .collect(Collectors.joining(", "));
+
+            debug(-1, "Unactivated: %s", payloads.apply(Boolean.TRUE));
+            debug(-1, "Activated: %s", payloads.apply(Boolean.FALSE));
         }
     }
 
@@ -1188,12 +1191,18 @@ public class Resolution<R, S> {
                                                               newActivated, new HashMap<>(getConflicts()))
                                            : new ArrayList<>(newRequirements);
 
-        @Nullable final R newRequirement =
-                sortedRequirements.stream()
-                                  .filter(requirement -> this.states.stream()
-                                                                    .noneMatch(state -> Objects.equals(state.getRequirement(), requirement)))
-                                  .findFirst()
-                                  .orElse(null);
+        final Function<R, Boolean> isRequirementUnique =
+                requirement -> this.states.stream()
+                                          .noneMatch(state -> Objects.equals(state.getRequirement(), requirement));
+
+        @Nullable R newRequirement = null;
+        while (!sortedRequirements.isEmpty()) {
+            newRequirement = sortedRequirements.remove(0);
+
+            if (isRequirementUnique.apply(newRequirement)) {
+                break;
+            }
+        }
 
         final String newName = newRequirement != null ? nameForDependency(newRequirement) : "";
         final List<PossibilitySet<R, S>> possibilities = possibilitiesForRequirement(newRequirement, newActivated);

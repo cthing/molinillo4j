@@ -24,7 +24,7 @@ public class PayloadTest {
         assertThat(payload.getPossibilitySet()).isEqualTo(possibilitySet);
         //noinspection ResultOfMethodCallIgnored
         assertThatIllegalStateException().isThrownBy(payload::getSpecification);
-        assertThat(payload).hasToString("Payload { possibilitySet=PossibilitySet { possibilities=def } }");
+        assertThat(payload).hasToString("PossibilitySet { possibilities=def }");
     }
 
     @Test
@@ -37,7 +37,7 @@ public class PayloadTest {
         assertThat(payload.getPossibilitySet()).isNull();
         //noinspection ResultOfMethodCallIgnored
         assertThatIllegalStateException().isThrownBy(payload::getSpecification);
-        assertThat(payload).hasToString("Payload { possibilitySet=null }");
+        assertThat(payload).hasToString("null");
     }
 
     @Test
@@ -50,7 +50,7 @@ public class PayloadTest {
         assertThat(payload.getSpecification()).isEqualTo("abc");
         //noinspection ResultOfMethodCallIgnored
         assertThatIllegalStateException().isThrownBy(payload::getPossibilitySet);
-        assertThat(payload).hasToString("Payload { specification=abc }");
+        assertThat(payload).hasToString("abc");
     }
 
     @Test
@@ -63,7 +63,7 @@ public class PayloadTest {
         assertThat(payload.getSpecification()).isNull();
         //noinspection ResultOfMethodCallIgnored
         assertThatIllegalStateException().isThrownBy(payload::getPossibilitySet);
-        assertThat(payload).hasToString("Payload { specification=null }");
+        assertThat(payload).hasToString("null");
     }
 
     @Test
