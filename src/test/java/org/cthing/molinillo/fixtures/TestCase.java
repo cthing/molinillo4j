@@ -47,7 +47,7 @@ public final class TestCase {
             final String requestedName = entry.getKey().replaceAll("\01", "");
             final String[] requestedConstraints = entry.getValue().asText().split("\\s*,\\s*");
             final TestDependency dependency = new TestDependency(requestedName, requestedConstraints);
-            this.requested.add(TestRequirement.fromDependency(dependency));
+            this.requested.add(new TestRequirement(dependency));
         });
 
         this.conflicts = mapper.convertValue(rootNode.get("conflicts"), new TypeReference<HashSet<String>>() { });
@@ -102,8 +102,7 @@ public final class TestCase {
     public DependencyGraph<TestRequirement, TestRequirement> getBase() {
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
         final JsonNode base = this.rootNode.get("base");
-        base.elements().forEachRemaining(element -> addDependenciesToGraph(graph, null, element,
-                                                                           TestRequirement::fromSpecification));
+        base.elements().forEachRemaining(element -> addDependenciesToGraph(graph, null, element, TestRequirement::new));
         return graph;
     }
 
@@ -146,7 +145,7 @@ public final class TestCase {
         final Vertex<R, TestRequirement> vertex;
         if (parent != null) {
             vertex = graph.addVertex(specName, payloadFunc.apply(dependency), false);
-            graph.addEdge(parent, vertex, TestRequirement.fromSpecification(dependency));
+            graph.addEdge(parent, vertex, new TestRequirement(dependency));
         } else {
             vertex = graph.addVertex(specName, payloadFunc.apply(dependency), true);
         }

@@ -17,7 +17,7 @@ public class TestRequirementTest {
     @Test
     public void testFromDependency() {
         final TestDependency dependency = new TestDependency("dep", ">=1.0", "<2.0");
-        final TestRequirement requirement = TestRequirement.fromDependency(dependency);
+        final TestRequirement requirement = new TestRequirement(dependency);
         assertThat(requirement.getName()).isEqualTo("dep");
         assertThat(requirement.isDependency()).isTrue();
         assertThat(requirement.isSpecification()).isFalse();
@@ -30,7 +30,7 @@ public class TestRequirementTest {
     public void testFromSpecification() {
         final TestSpecification spec = new TestSpecification("spec", "1.2.3",
                                                              Map.of("dep1", "< 2.0, >= 1.2.0", "dep2", "~> 3.1.0"));
-        final TestRequirement requirement = TestRequirement.fromSpecification(spec);
+        final TestRequirement requirement = new TestRequirement(spec);
         assertThat(requirement.getName()).isEqualTo("spec");
         assertThat(requirement.isDependency()).isFalse();
         assertThat(requirement.isSpecification()).isTrue();

@@ -42,7 +42,7 @@ public class TestIndexTest {
     @Test
     public void testNameForDependency() {
         final TestIndex index = TestIndex.fromFixture("restkit");
-        final TestRequirement requirement = TestRequirement.fromDependency(new TestDependency("dep", "=1.2.3"));
+        final TestRequirement requirement = new TestRequirement(new TestDependency("dep", "=1.2.3"));
         assertThat(index.nameForDependency(requirement)).isEqualTo("dep");
     }
 
@@ -62,7 +62,7 @@ public class TestIndexTest {
             final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> graph =
                     new DependencyGraph<>();
             final TestRequirement requirement =
-                    TestRequirement.fromDependency(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
+                    new TestRequirement(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
             final TestSpecification specification1 = new TestSpecification("RestKit", "0.23.1",
                                                                            Map.of("RestKit/Core", "= 0.23.1"));
             final TestSpecification specification2 = new TestSpecification("RestKit", "0.23.3",
@@ -77,8 +77,7 @@ public class TestIndexTest {
             final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> graph =
                     new DependencyGraph<>();
             final TestRequirement requirement =
-                    TestRequirement.fromSpecification(new TestSpecification("RestKit", "0.23.1",
-                                                                            Map.of("RestKit/Core", "= 0.23.1")));
+                    new TestRequirement(new TestSpecification("RestKit", "0.23.1", Map.of("RestKit/Core", "= 0.23.1")));
             final TestSpecification specification1 = new TestSpecification("RestKit", "0.23.1",
                                                                            Map.of("RestKit/Core", "= 0.23.1"));
             final TestSpecification specification2 = new TestSpecification("RestKit", "0.23.3",
@@ -97,7 +96,7 @@ public class TestIndexTest {
             final Payload<TestRequirement, TestSpecification> payload = Payload.fromSpecification(graphSpecification);
             graph.addVertex("RestKit", payload, false);
             final TestRequirement requirement =
-                    TestRequirement.fromDependency(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
+                    new TestRequirement(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
             final TestSpecification specification = new TestSpecification("RestKit", "0.23.1.alpha",
                                                                            Map.of("RestKit/Core", "= 0.23.1"));
             assertThat(index.requirementSatisfiedBy(requirement, graph, specification)).isFalse();
@@ -107,9 +106,9 @@ public class TestIndexTest {
     @Test
     public void testSearchFor() {
         final TestIndex index = TestIndex.fromFixture("restkit");
-        final TestRequirement requirement1 = TestRequirement.fromDependency(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
-        final TestRequirement requirement2 = TestRequirement.fromDependency(new TestDependency("RestKit", ">=0.24.0"));
-        final TestRequirement requirement3 = TestRequirement.fromDependency(new TestDependency("Rest", ">=1.0.0"));
+        final TestRequirement requirement1 = new TestRequirement(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
+        final TestRequirement requirement2 = new TestRequirement(new TestDependency("RestKit", ">=0.24.0"));
+        final TestRequirement requirement3 = new TestRequirement(new TestDependency("Rest", ">=1.0.0"));
         final TestSpecification spec1 = new TestSpecification("RestKit", "0.23.0", Map.of("RestKit/Core", "= 0.23.0"));
         final TestSpecification spec2 = new TestSpecification("RestKit", "0.23.1", Map.of("RestKit/Core", "= 0.23.1"));
         assertThat(index.searchFor(requirement1)).containsExactlyInAnyOrder(spec1, spec2);
@@ -121,7 +120,7 @@ public class TestIndexTest {
     public void testDependenciesFor() {
         final TestIndex index = TestIndex.fromFixture("restkit");
         final TestSpecification spec = new TestSpecification("RestKit", "0.23.1", Map.of("RestKit/Core", "= 0.23.1"));
-        final TestRequirement requirement = TestRequirement.fromDependency(new TestDependency("RestKit/Core", "0.23.1"));
+        final TestRequirement requirement = new TestRequirement(new TestDependency("RestKit/Core", "0.23.1"));
         assertThat(index.dependenciesFor(spec)).containsExactlyInAnyOrder(requirement);
     }
 
@@ -137,9 +136,8 @@ public class TestIndexTest {
         final TestSpecification specification = index.getSpecs().get("actionpack")[2];
         final List<TestRequirement> dependencies = new ArrayList<>(index.dependenciesFor(specification));
         final List<TestRequirement> sortedDependencies = index.sortDependencies(dependencies, graph, Map.of());
-        final TestRequirement requirement1 = TestRequirement.fromDependency(new TestDependency("activesupport",
-                                                                                               "= 2.3.5"));
-        final TestRequirement requirement2 = TestRequirement.fromDependency(new TestDependency("rack", "~> 1.0.0"));
+        final TestRequirement requirement1 = new TestRequirement(new TestDependency("activesupport", "= 2.3.5"));
+        final TestRequirement requirement2 = new TestRequirement(new TestDependency("rack", "~> 1.0.0"));
         assertThat(sortedDependencies).containsExactly(requirement2, requirement1);
     }
 }

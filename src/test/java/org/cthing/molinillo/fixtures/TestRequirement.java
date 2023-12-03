@@ -5,7 +5,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 
-public final class TestRequirement {
+public class TestRequirement {
 
     @Nullable
     private final TestDependency dependency;
@@ -13,19 +13,14 @@ public final class TestRequirement {
     @Nullable
     private final TestSpecification specification;
 
-    private TestRequirement(@Nullable final TestDependency dependency,
-                            @Nullable final TestSpecification specification) {
-        assert (dependency == null && specification != null) || (dependency != null && specification == null);
+    public TestRequirement(final TestDependency dependency) {
         this.dependency = dependency;
+        this.specification = null;
+    }
+
+    public TestRequirement(final TestSpecification specification) {
+        this.dependency = null;
         this.specification = specification;
-    }
-
-    public static TestRequirement fromDependency(final TestDependency dep) {
-        return new TestRequirement(dep, null);
-    }
-
-    public static TestRequirement fromSpecification(final TestSpecification spec) {
-        return new TestRequirement(null, spec);
     }
 
     public TestDependency getDependency() {

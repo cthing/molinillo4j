@@ -109,7 +109,7 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     public Set<TestRequirement> dependenciesFor(final TestSpecification specification) {
         return specification.getDependencies()
                             .stream()
-                            .map(TestRequirement::fromDependency)
+                            .map(TestRequirement::new)
                             .collect(Collectors.toSet());
     }
 

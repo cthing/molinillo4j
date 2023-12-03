@@ -20,11 +20,11 @@ public class TestCaseTest {
         assertThat(testCase.getName()).isEqualTo("resolves a conflict which requires non-trivial unwinding");
         assertThat(testCase.getIndex().getSpecs()).hasSize(127);
 
-        final TestRequirement requirement1 = TestRequirement.fromDependency(new TestDependency("devise", ""));
-        final TestRequirement requirement2 = TestRequirement.fromDependency(new TestDependency("sprockets-rails", ""));
-        final TestRequirement requirement3 = TestRequirement.fromDependency(new TestDependency("rails", ""));
-        final TestRequirement requirement4 = TestRequirement.fromDependency(new TestDependency("spring", ""));
-        final TestRequirement requirement5 = TestRequirement.fromDependency(new TestDependency("web-console", ""));
+        final TestRequirement requirement1 = new TestRequirement(new TestDependency("devise", ""));
+        final TestRequirement requirement2 = new TestRequirement(new TestDependency("sprockets-rails", ""));
+        final TestRequirement requirement3 = new TestRequirement(new TestDependency("rails", ""));
+        final TestRequirement requirement4 = new TestRequirement(new TestDependency("spring", ""));
+        final TestRequirement requirement5 = new TestRequirement(new TestDependency("web-console", ""));
         assertThat(testCase.getRequested()).containsExactlyInAnyOrder(requirement1, requirement2, requirement3,
                                                                       requirement4, requirement5);
         assertThat(testCase.getConflicts()).isEmpty();
