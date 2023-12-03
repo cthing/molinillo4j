@@ -1,6 +1,6 @@
 package org.cthing.molinillo.graph;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -38,9 +38,9 @@ public class Vertex<P, R> {
         this.name = name;
         this.payload = payload;
         this.root = false;
-        this.explicitRequirements = new HashSet<>();
-        this.outgoingEdges = new HashSet<>();
-        this.incomingEdges = new HashSet<>();
+        this.explicitRequirements = new LinkedHashSet<>();
+        this.outgoingEdges = new LinkedHashSet<>();
+        this.incomingEdges = new LinkedHashSet<>();
     }
 
     /**
@@ -161,7 +161,7 @@ public class Vertex<P, R> {
      * @return {@code true} if a path exists between this vertex and the specified vertex.
      */
     public boolean pathTo(final Vertex<P, R> other) {
-        return pathTo(other, new HashSet<>());
+        return pathTo(other, new LinkedHashSet<>());
     }
 
     /**

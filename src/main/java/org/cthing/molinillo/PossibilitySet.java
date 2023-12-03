@@ -2,7 +2,7 @@ package org.cthing.molinillo;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -30,7 +30,7 @@ public final class PossibilitySet<R, S> {
      * @param possibilities Possibility states for this set
      */
     public PossibilitySet(final Set<R> dependencies, final Collection<S> possibilities) {
-        this.dependencies = new HashSet<>(dependencies);
+        this.dependencies = new LinkedHashSet<>(dependencies);
         this.possibilities = new ArrayList<>(possibilities);
     }
 

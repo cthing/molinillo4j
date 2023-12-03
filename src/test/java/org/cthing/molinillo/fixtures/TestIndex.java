@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -110,7 +111,7 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
         return specification.getDependencies()
                             .stream()
                             .map(TestRequirement::new)
-                            .collect(Collectors.toSet());
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     @Override

@@ -43,7 +43,7 @@ public class TestCaseTest {
 
     @Test
     public void testResolve() {
-        final TestCase testCase = TestCase.fromFixture("simple_with_shared_dependencies");
+        final TestCase testCase = TestCase.fromFixture("conflict_common_parent");
         final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> result =
                 testCase.resolve(TestIndex.class);
         assertThat(result).isEqualTo(testCase.getResult());

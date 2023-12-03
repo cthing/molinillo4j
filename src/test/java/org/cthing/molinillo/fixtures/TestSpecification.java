@@ -1,5 +1,6 @@
 package org.cthing.molinillo.fixtures;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -32,7 +33,7 @@ public final class TestSpecification {
         this.dependencies = dependencies.entrySet().stream().map(entry -> {
             final String[] requirements = entry.getValue().split("\\s*,\\s*");
             return new TestDependency(entry.getKey(), requirements);
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public String getName() {

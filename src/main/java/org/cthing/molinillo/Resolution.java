@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -388,7 +388,7 @@ public class Resolution<R, S> {
                                            .values()
                                            .stream()
                                            .filter(vertex -> empty == vertex.getPayload().isEmpty())
-                                           .map(vertex -> vertex.getPayload().toString())
+                                           .map(vertex -> vertex.getPayload().orElseThrow().toString())
                                            .collect(Collectors.joining(", "));
 
             debug(0, "Unactivated: %s", payloads.apply(Boolean.TRUE));
@@ -593,7 +593,7 @@ public class Resolution<R, S> {
 
             // If this requirement has alternative possibilities, check if any would satisfy the other requirements
             // that created this conflict
-            final ResolutionState<R, S> requirementState = findStateFor(r);
+            ResolutionState<R, S> requirementState = findStateFor(r);
 
             if (conflictFixingPossibilities(requirementState, bindingRequirements)) {
                 unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), r, partialTree,
@@ -605,10 +605,10 @@ public class Resolution<R, S> {
             @Nullable R parentR = parentOf(r);
             if (parentR != null) {
                 partialTree.add(0, parentR);
-                final ResolutionState<R, S> parentRequirementState = findStateFor(parentR);
-                assert parentRequirementState != null;
-                if (parentRequirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(r))) {
-                    unwindDetails.add(new UnwindDetails<>(this.states.indexOf(parentRequirementState), parentR,
+                requirementState = findStateFor(parentR);
+                assert requirementState != null;
+                if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(r))) {
+                    unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), parentR,
                                                           partialTree, bindingRequirements, trees, new ArrayList<>()));
                 }
 
@@ -617,15 +617,12 @@ public class Resolution<R, S> {
                 @Nullable R grandparentR = parentOf(parentR);
                 while (grandparentR != null) {
                     partialTree.add(0, grandparentR);
-                    final ResolutionState<R, S> grandparentRequirementState = findStateFor(grandparentR);
-                    assert grandparentRequirementState != null;
-                    for (final PossibilitySet<R, S> set : grandparentRequirementState.getPossibilities()) {
-                        if (!set.getDependencies().contains(parentR)) {
-                            unwindDetails.add(new UnwindDetails<>(this.states.indexOf(grandparentRequirementState),
-                                                                  grandparentR, partialTree, bindingRequirements, trees,
-                                                                  new ArrayList<>()));
-                            break;
-                        }
+                    requirementState = findStateFor(grandparentR);
+                    assert requirementState != null;
+                    if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(r))) {
+                        unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState),
+                                                              grandparentR, partialTree, bindingRequirements, trees,
+                                                              new ArrayList<>()));
                     }
 
                     parentR = grandparentR;
@@ -866,7 +863,7 @@ public class Resolution<R, S> {
             return null;
         }
 
-        final List<Integer> parents = this.parentsOf.getOrDefault(requirement, new ArrayList<>());
+        final List<Integer> parents = this.parentsOf.computeIfAbsent(requirement, key -> new ArrayList<>());
         if (parents.isEmpty()) {
             return null;
         }
@@ -946,7 +943,7 @@ public class Resolution<R, S> {
         for (final Edge<Payload<R, S>, R> edge : vertex.getIncomingEdges()) {
             final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().orElseThrow().getPossibilitySet();
             @Nullable final S latestVersion = possibilitySet.getLatestVersion();
-            requirements.computeIfAbsent(latestVersion, k -> new HashSet<>()).add(edge.getRequirement());
+            requirements.computeIfAbsent(latestVersion, k -> new LinkedHashSet<>()).add(edge.getRequirement());
         }
 
         final Map<String, S> activatedByName = new HashMap<>();
@@ -1085,7 +1082,7 @@ public class Resolution<R, S> {
 
         if (!filteredSet.getPossibilities().isEmpty()) {
             getActivated().setPayload(getName(), new Payload<>(filteredSet));
-            final Set<R> newRequirements = new HashSet<>(getRequirements());
+            final Set<R> newRequirements = new LinkedHashSet<>(getRequirements());
             pushStateForRequirements(newRequirements, false);
         } else {
             createConflict(null);
@@ -1104,7 +1101,7 @@ public class Resolution<R, S> {
     private PossibilitySet<R, S> filteredPossibilitySet(final Vertex<Payload<R, S>, R> vertex) {
         final PossibilitySet<R, S> vertexPossibilitySet = vertex.getPayload().orElseThrow().getPossibilitySet();
 
-        final Set<S> commonPossibilities = new HashSet<>(vertexPossibilitySet.getPossibilities());
+        final Set<S> commonPossibilities = new LinkedHashSet<>(vertexPossibilitySet.getPossibilities());
         commonPossibilities.retainAll(getPossibility().getPossibilities());
 
         return new PossibilitySet<>(vertexPossibilitySet.getDependencies(), commonPossibilities);
@@ -1150,13 +1147,13 @@ public class Resolution<R, S> {
             getActivated().addChildVertex(nameForDependency(d), null,
                                           List.of(nameForSpecification(possibilitySet.getLatestVersion())), d);
             final int parentIndex = this.states.size() - 1;
-            final List<Integer> parents = this.parentsOf.getOrDefault(d, new ArrayList<>());
+            final List<Integer> parents = this.parentsOf.computeIfAbsent(d, key -> new ArrayList<>());
             if (parents.isEmpty()) {
                 parents.add(parentIndex);
             }
         }
 
-        final Set<R> allRequirements = new HashSet<>(getRequirements());
+        final Set<R> allRequirements = new LinkedHashSet<>(getRequirements());
         allRequirements.addAll(nestedDependencies);
         pushStateForRequirements(allRequirements, !nestedDependencies.isEmpty());
     }
@@ -1181,7 +1178,7 @@ public class Resolution<R, S> {
     private void pushStateForRequirements(final Set<R> newRequirements, final boolean requiresSort,
                                           final DependencyGraph<Payload<R, S>, R> newActivated) {
         final List<R> sortedRequirements = requiresSort
-                                           ? sortDependencies(new ArrayList<>(new HashSet<>(newRequirements)),
+                                           ? sortDependencies(new ArrayList<>(new LinkedHashSet<>(newRequirements)),
                                                               newActivated, new HashMap<>(getConflicts()))
                                            : new ArrayList<>(newRequirements);
 
@@ -1221,7 +1218,7 @@ public class Resolution<R, S> {
         if (state.getRequirement() != null && state.getPossibilities().isEmpty()
                 && allowMissing(state.getRequirement())) {
             state.getActivated().detachVertexNamed(state.getName());
-            pushStateForRequirements(new HashSet<>(state.getRequirements()), false, state.getActivated());
+            pushStateForRequirements(new LinkedHashSet<>(state.getRequirements()), false, state.getActivated());
         } else {
             this.states.add(state);
             state.getActivated().tag(state);
