@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -94,7 +95,7 @@ public class DependencyGraph<P, R> {
      * @return Newly created vertex
      * @throws IllegalArgumentException if no parent vertices are specified
      */
-    public Vertex<P, R> addChildVertex(final String name, final P payload, final List<String> parentNames,
+    public Vertex<P, R> addChildVertex(final String name, @Nullable final P payload, final List<String> parentNames,
                                        final R requirement) {
         if (parentNames.isEmpty()) {
             throw new IllegalArgumentException("Parent vertices must be specified");
@@ -117,7 +118,7 @@ public class DependencyGraph<P, R> {
      * @param root Indicates whether the vertex is a root of the graph
      * @return The newly created or updated vertex
      */
-    public Vertex<P, R> addVertex(final String name, final P payload, final boolean root) {
+    public Vertex<P, R> addVertex(final String name, @Nullable final P payload, final boolean root) {
         return this.log.addVertex(this, name, payload, root);
     }
 
@@ -240,7 +241,12 @@ public class DependencyGraph<P, R> {
         for (final Map.Entry<String, Vertex<P, R>> vertexEntry : this.vertices.entrySet()) {
             final String name = vertexEntry.getKey();
             final Vertex<P, R> vertex = vertexEntry.getValue();
-            dotVertices.add(String.format("%s [label=\"{%s|%s}\"]", name, name, vertex.getPayload()));
+            final Optional<P> payload = vertex.getPayload();
+            if (payload.isPresent()) {
+                dotVertices.add(String.format("%s [label=\"{%s|%s}\"]", name, name, payload.get()));
+            } else {
+                dotVertices.add(String.format("%s [label=\"{%s}\"]", name, name));
+            }
             for (final Edge<P, R> edge : vertex.getOutgoingEdges()) {
                 final String label = edge.getRequirement().toString();
                 dotEdges.add(String.format("  %s -> %s [label=%s]", edge.getOrigin().getName(),

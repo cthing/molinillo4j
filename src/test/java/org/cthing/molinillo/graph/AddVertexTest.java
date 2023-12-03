@@ -15,13 +15,13 @@ public class AddVertexTest {
     public void testConstruction() {
         AddVertex<String, String> vertexAction = new AddVertex<>("abc", "payload1", false);
         assertThat(vertexAction.getName()).isEqualTo("abc");
-        assertThat(vertexAction.getPayload()).isEqualTo("payload1");
+        assertThat(vertexAction.getPayload()).contains("payload1");
         assertThat(vertexAction.isRoot()).isFalse();
         assertThat(vertexAction).hasToString("AddVertex { name=abc, payload=payload1, root=false }");
 
         vertexAction = new AddVertex<>("def", "payload2", true);
         assertThat(vertexAction.getName()).isEqualTo("def");
-        assertThat(vertexAction.getPayload()).isEqualTo("payload2");
+        assertThat(vertexAction.getPayload()).contains("payload2");
         assertThat(vertexAction.isRoot()).isTrue();
         assertThat(vertexAction).hasToString("AddVertex { name=def, payload=payload2, root=true }");
     }
@@ -44,7 +44,7 @@ public class AddVertexTest {
 
         final Vertex<String, String> vertex = vertexAction.up(graph);
         assertThat(vertexAction.getName()).isEqualTo("abc");
-        assertThat(vertexAction.getPayload()).isEqualTo("payload");
+        assertThat(vertexAction.getPayload()).contains("payload");
         assertThat(vertexAction.isRoot()).isTrue();
         assertThat(graph.vertexNamed("abc")).isEqualTo(vertex);
 
@@ -62,7 +62,7 @@ public class AddVertexTest {
         final AddVertex<String, String> vertexAction = new AddVertex<>("abc", "payload2", true);
         final Vertex<String, String> vertex2 = vertexAction.up(graph);
         assertThat(vertex2.getName()).isEqualTo("abc");
-        assertThat(vertex2.getPayload()).isEqualTo("payload2");
+        assertThat(vertex2.getPayload()).contains("payload1");
         assertThat(vertex2.isRoot()).isTrue();
         assertThat(graph.vertexNamed("abc")).isEqualTo(vertex2);
 
@@ -70,7 +70,7 @@ public class AddVertexTest {
         final Vertex<String, String> vertex3 = graph.vertexNamed("abc");
         assertThat(vertex3).isNotNull();
         assertThat(vertex3.getName()).isEqualTo("abc");
-        assertThat(vertex3.getPayload()).isEqualTo("payload1");
+        assertThat(vertex3.getPayload()).contains("payload1");
         assertThat(vertex3.isRoot()).isFalse();
     }
 }

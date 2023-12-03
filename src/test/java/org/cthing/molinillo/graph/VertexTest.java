@@ -11,7 +11,7 @@ public class VertexTest {
     public void testConstruction() {
         final Vertex<String, String> vertex = new Vertex<>("abc", "def");
         assertThat(vertex.getName()).isEqualTo("abc");
-        assertThat(vertex.getPayload()).isEqualTo("def");
+        assertThat(vertex.getPayload()).contains("def");
         assertThat(vertex.isRoot()).isFalse();
         assertThat(vertex.getExplicitRequirements()).isEmpty();
         assertThat(vertex.getOutgoingEdges()).isEmpty();
@@ -30,7 +30,7 @@ public class VertexTest {
     public void testPayload() {
         final Vertex<String, String> vertex = new Vertex<>("abc", "def");
         vertex.setPayload("xyz");
-        assertThat(vertex.getPayload()).isEqualTo("xyz");
+        assertThat(vertex.getPayload()).contains("xyz");
     }
 
     @Test

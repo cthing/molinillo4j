@@ -2,9 +2,12 @@ package org.cthing.molinillo.graph;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.Nullable;
 
 
 /**
@@ -16,7 +19,10 @@ import java.util.stream.Stream;
 public class Vertex<P, R> {
 
     private String name;
+
+    @Nullable
     private P payload;
+
     private boolean root;
     private final Set<R> explicitRequirements;
     private final Set<Edge<P, R>> outgoingEdges;
@@ -28,7 +34,7 @@ public class Vertex<P, R> {
      * @param name Identifier for the vertex
      * @param payload User defined data held by the vertex
      */
-    public Vertex(final String name, final P payload) {
+    public Vertex(final String name, @Nullable final P payload) {
         this.name = name;
         this.payload = payload;
         this.root = false;
@@ -60,8 +66,8 @@ public class Vertex<P, R> {
      *
      * @return User defined data held by the vertex.
      */
-    public P getPayload() {
-        return this.payload;
+    public Optional<P> getPayload() {
+        return Optional.ofNullable(this.payload);
     }
 
     /**
@@ -69,7 +75,7 @@ public class Vertex<P, R> {
      *
      * @param payload User defined data to be held by the vertex
      */
-    public void setPayload(final P payload) {
+    public void setPayload(@Nullable final P payload) {
         this.payload = payload;
     }
 

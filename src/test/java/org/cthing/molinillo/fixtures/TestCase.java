@@ -94,8 +94,7 @@ public final class TestCase {
     public DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> getResult() {
         final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> graph = new DependencyGraph<>();
         final JsonNode resolved = this.rootNode.get("resolved");
-        resolved.elements().forEachRemaining(element -> addDependenciesToGraph(graph, null, element,
-                                                                               Payload::fromSpecification));
+        resolved.elements().forEachRemaining(element -> addDependenciesToGraph(graph, null, element, Payload::new));
         return graph;
     }
 

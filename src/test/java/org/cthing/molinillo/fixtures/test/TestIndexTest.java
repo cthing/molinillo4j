@@ -93,7 +93,7 @@ public class TestIndexTest {
                     new DependencyGraph<>();
             final TestSpecification graphSpecification = new TestSpecification("RestKit", "0.23.1",
                                                                           Map.of("RestKit/Core", "= 0.23.1"));
-            final Payload<TestRequirement, TestSpecification> payload = Payload.fromSpecification(graphSpecification);
+            final Payload<TestRequirement, TestSpecification> payload = new Payload<>(graphSpecification);
             graph.addVertex("RestKit", payload, false);
             final TestRequirement requirement =
                     new TestRequirement(new TestDependency("RestKit", ">=0.23.0", "<0.23.2"));
@@ -130,7 +130,7 @@ public class TestIndexTest {
         final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> graph =
                 new DependencyGraph<>();
         final Payload<TestRequirement, TestSpecification> payload =
-                Payload.fromSpecification(new TestSpecification("rack", "1.4.0", Map.of()));
+                new Payload<>(new TestSpecification("rack", "1.4.0", Map.of()));
         graph.addVertex("rack", payload, false);
 
         final TestSpecification specification = index.getSpecs().get("actionpack")[2];

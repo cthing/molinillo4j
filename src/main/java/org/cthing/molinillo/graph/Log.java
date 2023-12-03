@@ -63,8 +63,8 @@ public class Log<P, R> implements Iterable<Action<P, R, ?>> {
      * @param root Indicates if the vertex is a root of the graph
      * @return The newly created or updated vertex
      */
-    public Vertex<P, R> addVertex(final DependencyGraph<P, R> graph, final String name, final P payload,
-                                  final boolean root) {
+    public Vertex<P, R> addVertex(final DependencyGraph<P, R> graph, final String name,
+                                  @Nullable final P payload, final boolean root) {
         return pushAction(graph, new AddVertex<>(name, payload, root));
     }
 
@@ -101,7 +101,7 @@ public class Log<P, R> implements Iterable<Action<P, R, ?>> {
      * @param name Name of the vertex whose payload is to be set
      * @param payload Payload to set on the vertex
      */
-    public void setPayload(final DependencyGraph<P, R> graph, final String name, final P payload) {
+    public void setPayload(final DependencyGraph<P, R> graph, final String name, @Nullable final P payload) {
         pushAction(graph, new SetPayload<>(name, payload));
     }
 

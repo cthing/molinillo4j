@@ -18,7 +18,7 @@ public class PossibilityStateTest {
         final String name = "abc";
         final List<String> requirements = List.of("req1", "req2");
         final DependencyGraph<Payload<String, String>, String> dependencyGraph = new DependencyGraph<>();
-        dependencyGraph.addVertex("v1", Payload.fromSpecification("hello"), true);
+        dependencyGraph.addVertex("v1", new Payload<>("hello"), true);
         final String requirement = "def";
         final PossibilitySet<String, String> possibilitySet = new PossibilitySet<>(Set.of("dep1"), List.of("pos1"));
         final List<PossibilitySet<String, String>> possilibilites = List.of(possibilitySet);

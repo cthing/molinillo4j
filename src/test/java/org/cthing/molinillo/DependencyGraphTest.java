@@ -205,15 +205,15 @@ public class DependencyGraphTest {
         this.graph.tag("tag1");
 
         final Vertex<String, String> vertexA = this.graph.addVertex("A", "payloadA", true);
-        assertThat(vertexA.getPayload()).isEqualTo("payloadA");
+        assertThat(vertexA.getPayload()).contains("payloadA");
 
         this.graph.tag("tag2");
 
         this.graph.setPayload("A", "payload17");
-        assertThat(vertexA.getPayload()).isEqualTo("payload17");
+        assertThat(vertexA.getPayload()).contains("payload17");
 
         this.graph.rewindTo("tag2");
-        assertThat(vertexA.getPayload()).isEqualTo("payloadA");
+        assertThat(vertexA.getPayload()).contains("payloadA");
 
         this.graph.rewindTo("tag1");
         assertThat(this.graph.isEmpty()).isTrue();

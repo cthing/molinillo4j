@@ -1,6 +1,7 @@
 package org.cthing.molinillo.graph;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -17,17 +18,22 @@ public class AddVertex<P, R> extends Action<P, R, Vertex<P, R>> {
 
     @SuppressWarnings("InnerClassFieldHidesOuterClassField")
     private final class Existing {
+        @Nullable
         final P payload;
+
         final boolean root;
 
-        private Existing(final P payload, final boolean root) {
+        private Existing(@Nullable final P payload, final boolean root) {
             this.payload = payload;
             this.root = root;
         }
     }
 
     private final String name;
+
+    @Nullable
     private final P payload;
+
     private final boolean root;
 
     @Nullable
@@ -40,7 +46,7 @@ public class AddVertex<P, R> extends Action<P, R, Vertex<P, R>> {
      * @param payload Payload for the vertex
      * @param root {@code true} if this is a root node of the graph
      */
-    public AddVertex(final String name, final P payload, final boolean root) {
+    public AddVertex(final String name, @Nullable final P payload, final boolean root) {
         this.name = name;
         this.payload = payload;
         this.root = root;
@@ -60,8 +66,8 @@ public class AddVertex<P, R> extends Action<P, R, Vertex<P, R>> {
      *
      * @return Vertex payload
      */
-    public P getPayload() {
-        return this.payload;
+    public Optional<P> getPayload() {
+        return Optional.ofNullable(this.payload);
     }
 
     /**
@@ -77,9 +83,13 @@ public class AddVertex<P, R> extends Action<P, R, Vertex<P, R>> {
     public Vertex<P, R> up(final DependencyGraph<P, R> graph) {
         Vertex<P, R> vertex = graph.getVertices().get(this.name);
         if (vertex != null) {
-            this.existing = new Existing(vertex.getPayload(), vertex.isRoot());
-            vertex.setPayload(this.payload);
-            vertex.setRoot(this.root);
+            this.existing = new Existing(vertex.getPayload().orElse(null), vertex.isRoot());
+            if (vertex.getPayload().isEmpty()) {
+                vertex.setPayload(this.payload);
+            }
+            if (!vertex.isRoot()) {
+                vertex.setRoot(this.root);
+            }
         } else {
             vertex = new Vertex<>(this.name, this.payload);
             vertex.setRoot(this.root);

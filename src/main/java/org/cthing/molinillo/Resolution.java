@@ -349,12 +349,11 @@ public class Resolution<R, S> {
     private DependencyGraph<Payload<R, S>, R> resolveActivatedSpecs() {
         for (final Map.Entry<String, Vertex<Payload<R, S>, R>> entry : getActivated().getVertices().entrySet()) {
             final Vertex<Payload<R, S>, R> vertex = entry.getValue();
-            if (!vertex.getPayload().isEmpty()) {
-                final PossibilitySet<R, S> possibilitySet = vertex.getPayload().getPossibilitySet();
-                assert possibilitySet != null;
+            if (vertex.getPayload().isPresent()) {
+                final PossibilitySet<R, S> possibilitySet = vertex.getPayload().get().getPossibilitySet();
                 final List<S> possibilities = new ArrayList<>(possibilitySet.getPossibilities());
                 Collections.reverse(possibilities);
-                @Nullable final S latestVersion =
+                final S latestVersion =
                         possibilities.stream()
                                      .filter(possibility -> vertex.requirements()
                                                                   .stream()
@@ -362,8 +361,8 @@ public class Resolution<R, S> {
                                                                                                                   getActivated(),
                                                                                                                   possibility)))
                                      .findFirst()
-                                     .orElse(null);
-                getActivated().setPayload(vertex.getName(), Payload.fromSpecification(latestVersion));
+                                     .orElseThrow();
+                getActivated().setPayload(vertex.getName(), new Payload<>(latestVersion));
             }
         }
 
@@ -442,8 +441,7 @@ public class Resolution<R, S> {
         final DependencyGraph<Payload<R, S>, R> graph = new DependencyGraph<>();
 
         for (final R requested : this.originalRequested) {
-            final Payload<R, S> payload = Payload.fromPossibilitySet(null);
-            final Vertex<Payload<R, S>, R> vertex = graph.addVertex(nameForDependency(requested), payload, true);
+            final Vertex<Payload<R, S>, R> vertex = graph.addVertex(nameForDependency(requested), null, true);
             vertex.getExplicitRequirements().add(requested);
         }
 
@@ -771,7 +769,7 @@ public class Resolution<R, S> {
         getActivated().tag(SWAP);
 
         if (getActivated().vertexNamed(name) != null) {
-            final Payload<R, S> payload = Payload.fromSpecification(possibility);
+            final Payload<R, S> payload = new Payload<>(possibility);
             getActivated().setPayload(name, payload);
         }
         final boolean satisfied = requirements.stream()
@@ -946,28 +944,23 @@ public class Resolution<R, S> {
             requirements.put(nameForLockingDependencySource(), Set.of(lockedRequirement));
         }
         for (final Edge<Payload<R, S>, R> edge : vertex.getIncomingEdges()) {
-            final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().getPossibilitySet();
-            assert possibilitySet != null;
+            final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().orElseThrow().getPossibilitySet();
             @Nullable final S latestVersion = possibilitySet.getLatestVersion();
             requirements.computeIfAbsent(latestVersion, k -> new HashSet<>()).add(edge.getRequirement());
         }
 
         final Map<String, S> activatedByName = new HashMap<>();
         for (final Vertex<Payload<R, S>, R> v : getActivated().getVertices().values()) {
-            if (!v.getPayload().isEmpty()) {
-                final PossibilitySet<R, S> possibilitySet = v.getPayload().getPossibilitySet();
-                if (possibilitySet != null) {
-                    activatedByName.put(v.getName(), v.getPayload().getPossibilitySet().getLatestVersion());
-                }
+            if (v.getPayload().isPresent()) {
+                activatedByName.put(v.getName(), v.getPayload().get().getPossibilitySet().getLatestVersion());
             }
         }
 
         @Nullable final R requirement = getRequirement();
         assert requirement != null;
-        final Payload<R, S> payload = vertex.getPayload();
-        @Nullable final S existingSpecification = (payload.isEmpty() || payload.getPossibilitySet() == null)
-                                                  ? null
-                                                  : payload.getPossibilitySet().getLatestVersion();
+        final Optional<Payload<R, S>> payload = vertex.getPayload();
+        @Nullable final S existingSpecification = payload.map(rsPayload -> rsPayload.getPossibilitySet().getLatestVersion())
+                                                         .orElse(null);
         @Nullable final PossibilitySet<R, S> possibilitySet = getPossibilities().isEmpty()
                                                               ? null
                                                               : getPossibilities().get(getPossibilities().size() - 1);
@@ -1058,7 +1051,7 @@ public class Resolution<R, S> {
         final Vertex<Payload<R, S>, R> existingVertex = getActivated().vertexNamed(getName());
         assert existingVertex != null;
 
-        if (!existingVertex.getPayload().isEmpty()) {
+        if (existingVertex.getPayload().isPresent()) {
             debug(getDepth(), "Found existing spec (%s)", existingVertex.getPayload());
             attemptToFilterExistingSpec(existingVertex);
         } else {
@@ -1091,7 +1084,7 @@ public class Resolution<R, S> {
         final PossibilitySet<R, S> filteredSet = filteredPossibilitySet(vertex);
 
         if (!filteredSet.getPossibilities().isEmpty()) {
-            getActivated().setPayload(getName(), Payload.fromPossibilitySet(filteredSet));
+            getActivated().setPayload(getName(), new Payload<>(filteredSet));
             final Set<R> newRequirements = new HashSet<>(getRequirements());
             pushStateForRequirements(newRequirements, false);
         } else {
@@ -1109,8 +1102,7 @@ public class Resolution<R, S> {
      * @return The possibilities on the specified vertex filtered by the possibilities in the current state.
      */
     private PossibilitySet<R, S> filteredPossibilitySet(final Vertex<Payload<R, S>, R> vertex) {
-        final PossibilitySet<R, S> vertexPossibilitySet = vertex.getPayload().getPossibilitySet();
-        assert vertexPossibilitySet != null;
+        final PossibilitySet<R, S> vertexPossibilitySet = vertex.getPayload().orElseThrow().getPossibilitySet();
 
         final Set<S> commonPossibilities = new HashSet<>(vertexPossibilitySet.getPossibilities());
         commonPossibilities.retainAll(getPossibility().getPossibilities());
@@ -1128,7 +1120,7 @@ public class Resolution<R, S> {
     @Nullable
     private R lockedRequirementNamed(final String requirementName) {
         final Vertex<R, R> vertex = this.base.vertexNamed(requirementName);
-        return (vertex == null) ? null : vertex.getPayload();
+        return (vertex == null) ? null : vertex.getPayload().orElse(null);
     }
 
     /**
@@ -1137,7 +1129,7 @@ public class Resolution<R, S> {
     private void activateNewSpec() {
         getConflicts().remove(getName());
         debug(getDepth(), "Activated %s at %s", getName(), getPossibility());
-        getActivated().setPayload(getName(), Payload.fromPossibilitySet(getPossibility()));
+        getActivated().setPayload(getName(), new Payload<>(getPossibility()));
         requireNestedDependenciesFor(getPossibility());
     }
 
@@ -1155,8 +1147,7 @@ public class Resolution<R, S> {
                                                                                   .collect(Collectors.joining(", ")));
 
         for (final R d : nestedDependencies) {
-            final Payload<R, S> payload = Payload.fromPossibilitySet(null);
-            getActivated().addChildVertex(nameForDependency(d), payload,
+            getActivated().addChildVertex(nameForDependency(d), null,
                                           List.of(nameForSpecification(possibilitySet.getLatestVersion())), d);
             final int parentIndex = this.states.size() - 1;
             final List<Integer> parents = this.parentsOf.getOrDefault(d, new ArrayList<>());

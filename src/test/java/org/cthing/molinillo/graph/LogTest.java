@@ -156,15 +156,15 @@ public class LogTest {
         this.log.tag(this.graph, "tag1");
 
         final Vertex<String, String> vertexA = this.log.addVertex(this.graph, "A", "payloadA", true);
-        assertThat(vertexA.getPayload()).isEqualTo("payloadA");
+        assertThat(vertexA.getPayload()).contains("payloadA");
 
         this.log.tag(this.graph, "tag2");
 
         this.log.setPayload(this.graph, "A", "payload17");
-        assertThat(vertexA.getPayload()).isEqualTo("payload17");
+        assertThat(vertexA.getPayload()).contains("payload17");
 
         this.log.rewindTo(this.graph, "tag2");
-        assertThat(vertexA.getPayload()).isEqualTo("payloadA");
+        assertThat(vertexA.getPayload()).contains("payloadA");
 
         this.log.rewindTo(this.graph, "tag1");
         assertThat(this.graph.isEmpty()).isTrue();

@@ -1,6 +1,7 @@
 package org.cthing.molinillo.graph;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -16,6 +17,8 @@ import org.cthing.molinillo.DependencyGraph;
 public class SetPayload<P, R> extends Action<P, R, Void> {
 
     private final String name;
+
+    @Nullable
     private final P payload;
 
     @Nullable
@@ -27,7 +30,7 @@ public class SetPayload<P, R> extends Action<P, R, Void> {
      * @param name Name of the vertex whose payload is to be set
      * @param payload Payload to set on the vertex
      */
-    public SetPayload(final String name, final P payload) {
+    public SetPayload(final String name, @Nullable final P payload) {
         this.name = name;
         this.payload = payload;
     }
@@ -46,15 +49,15 @@ public class SetPayload<P, R> extends Action<P, R, Void> {
      *
      * @return Payload set on the vertex.
      */
-    public P getPayload() {
-        return this.payload;
+    public Optional<P> getPayload() {
+        return Optional.ofNullable(this.payload);
     }
 
     @Override
     public Void up(final DependencyGraph<P, R> graph) {
         final Vertex<P, R> vertex = graph.vertexNamed(this.name);
         assert vertex != null;
-        this.oldPayload = vertex.getPayload();
+        this.oldPayload = vertex.getPayload().orElse(null);
         vertex.setPayload(this.payload);
         return null;
     }
@@ -63,7 +66,6 @@ public class SetPayload<P, R> extends Action<P, R, Void> {
     public void down(final DependencyGraph<P, R> graph) {
         final Vertex<P, R> vertex = graph.vertexNamed(this.name);
         assert vertex != null;
-        assert this.oldPayload != null;
         vertex.setPayload(this.oldPayload);
     }
 

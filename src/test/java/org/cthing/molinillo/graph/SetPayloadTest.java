@@ -15,7 +15,7 @@ public class SetPayloadTest {
     public void testConstruction() {
         final SetPayload<String, String> payloadAction = new SetPayload<>("abc", "def");
         assertThat(payloadAction.getName()).isEqualTo("abc");
-        assertThat(payloadAction.getPayload()).isEqualTo("def");
+        assertThat(payloadAction.getPayload()).contains("def");
         assertThat(payloadAction).hasToString("SetPayload { name=abc, payload=def }");
     }
 
@@ -31,15 +31,15 @@ public class SetPayloadTest {
     @Test
     public void testUpDown() {
         final Vertex<String, String> vertex = new Vertex<>("abc", "payload1");
-        assertThat(vertex.getPayload()).isEqualTo("payload1");
+        assertThat(vertex.getPayload()).contains("payload1");
 
         final DependencyGraph<String, String> graph = new DependencyGraph<>();
         graph.getVertices().put(vertex.getName(), vertex);
 
         final SetPayload<String, String> payloadAction = new SetPayload<>("abc", "payload2");
         payloadAction.up(graph);
-        assertThat(vertex.getPayload()).isEqualTo("payload2");
+        assertThat(vertex.getPayload()).contains("payload2");
         payloadAction.down(graph);
-        assertThat(vertex.getPayload()).isEqualTo("payload1");
+        assertThat(vertex.getPayload()).contains("payload1");
     }
 }
