@@ -1,10 +1,12 @@
 package org.cthing.molinillo.fixtures.test;
 
+import java.util.List;
+
 import org.cthing.molinillo.DependencyGraph;
 import org.cthing.molinillo.Payload;
+import org.cthing.molinillo.fixtures.BundlerTestIndex;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestDependency;
-import org.cthing.molinillo.fixtures.TestIndex;
 import org.cthing.molinillo.fixtures.TestRequirement;
 import org.cthing.molinillo.fixtures.TestSpecification;
 import org.junit.jupiter.api.Test;
@@ -37,15 +39,15 @@ public class TestCaseTest {
 
     @Test
     public void testAll() {
-        final TestCase[] testCases = TestCase.all();
+        final List<TestCase> testCases = TestCase.all();
         assertThat(testCases).hasSize(25);
     }
 
     @Test
     public void testResolve() {
-        final TestCase testCase = TestCase.fromFixture("conflict_common_parent");
+        final TestCase testCase = TestCase.fromFixture("shared_parent_dependency_with_swapping");
         final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> result =
-                testCase.resolve(TestIndex.class);
+                testCase.resolve(BundlerTestIndex.class);
         assertThat(result).isEqualTo(testCase.getResult());
     }
 }

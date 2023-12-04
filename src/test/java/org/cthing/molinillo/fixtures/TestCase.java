@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -29,20 +31,22 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public final class TestCase {
 
+    private final File fixture;
     private final JsonNode rootNode;
     private final String name;
     private final TestIndex index;
     private final Set<TestRequirement> requested;
     private final Set<String> conflicts;
 
-    private TestCase(final ObjectMapper mapper, final JsonNode rootNode) {
+    private TestCase(final File fixture, final ObjectMapper mapper, final JsonNode rootNode) {
+        this.fixture = fixture;
         this.rootNode = rootNode;
         this.name = rootNode.get("name").asText();
 
         final String indexName = rootNode.has("index") ? rootNode.get("index").asText() : "awesome";
         this.index = TestIndex.fromFixture(indexName);
 
-        this.requested = new HashSet<>();
+        this.requested = new LinkedHashSet<>();
         rootNode.get("requested").fields().forEachRemaining(entry -> {
             final String requestedName = entry.getKey().replaceAll("\01", "");
             final String[] requestedConstraints = entry.getValue().asText().split("\\s*,\\s*");
@@ -50,7 +54,7 @@ public final class TestCase {
             this.requested.add(new TestRequirement(dependency));
         });
 
-        this.conflicts = mapper.convertValue(rootNode.get("conflicts"), new TypeReference<HashSet<String>>() { });
+        this.conflicts = mapper.convertValue(rootNode.get("conflicts"), new TypeReference<LinkedHashSet<String>>() { });
     }
 
     public static TestCase fromFixture(final String fixtureName) {
@@ -63,16 +67,20 @@ public final class TestCase {
                                                       .enable(JsonParser.Feature.INCLUDE_SOURCE_IN_LOCATION);
         try {
             final JsonNode rootNode = mapper.readTree(fixtureFile);
-            return new TestCase(mapper, rootNode);
+            return new TestCase(fixtureFile, mapper, rootNode);
         } catch (final IOException ex) {
             throw new IllegalStateException("Error parsing test case: " + fixtureFile, ex);
         }
     }
 
-    public static TestCase[] all() {
+    public static List<TestCase> all() {
         final File[] files = TestLocations.CASE_DIR.listFiles((d, name) -> name.endsWith(".json"));
         assert files != null;
-        return Arrays.stream(files).map(TestCase::fromFixture).toArray(TestCase[]::new);
+        return Arrays.stream(files).map(TestCase::fromFixture).collect(Collectors.toList());
+    }
+
+    public File getFixture() {
+        return this.fixture;
     }
 
     public String getName() {
@@ -123,7 +131,7 @@ public final class TestCase {
     private <R> void addDependenciesToGraph(final DependencyGraph<R, TestRequirement> graph,
                                         @Nullable final Vertex<R, TestRequirement> parent,
                                         final JsonNode json, final Function<TestSpecification, R> payloadFunc) {
-        addDependenciesToGraph(graph, parent, json, payloadFunc, new HashSet<>());
+        addDependenciesToGraph(graph, parent, json, payloadFunc, new LinkedHashSet<>());
     }
 
     private <R> void addDependenciesToGraph(final DependencyGraph<R, TestRequirement> graph,
