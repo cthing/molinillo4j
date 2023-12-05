@@ -558,13 +558,17 @@ public class Resolution<R, S> {
 
         // Update the "requirementUnwoundToInstead" on any relevant unused unwinds.
         for (final UnwindDetails<R, S> d : relevantUnusedUnwinds) {
-            d.getRequirementsUnwoundToInstead().add(currentDetailHolder.currentDetail.getStateRequirement());
-            d.getRequirementsUnwoundToInstead().stream().distinct().collect(Collectors.toList());
+            @Nullable final R req = currentDetailHolder.currentDetail.getStateRequirement();
+            if (!d.getRequirementsUnwoundToInstead().contains(req)) {
+                d.getRequirementsUnwoundToInstead().add(req);
+            }
         }
 
         unwindDetails.forEach(d -> {
-            d.getRequirementsUnwoundToInstead().add(currentDetailHolder.currentDetail.getStateRequirement());
-            d.getRequirementsUnwoundToInstead().stream().distinct().collect(Collectors.toList());
+            @Nullable final R req = currentDetailHolder.currentDetail.getStateRequirement();
+            if (!d.getRequirementsUnwoundToInstead().contains(req)) {
+                d.getRequirementsUnwoundToInstead().add(req);
+            }
         });
 
         return currentDetailHolder.currentDetail;
@@ -944,7 +948,14 @@ public class Resolution<R, S> {
         for (final Edge<Payload<R, S>, R> edge : vertex.getIncomingEdges()) {
             final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().orElseThrow().getPossibilitySet();
             @Nullable final S latestVersion = possibilitySet.getLatestVersion();
-            requirements.computeIfAbsent(latestVersion, k -> new LinkedHashSet<>()).add(edge.getRequirement());
+
+            final Set<R> reqs = requirements.get(latestVersion);
+            final Set<R> newReqs = new LinkedHashSet<>();
+            newReqs.add(edge.getRequirement());
+            if (reqs != null) {
+                newReqs.addAll(reqs);
+            }
+            requirements.put(latestVersion, newReqs);
         }
 
         final Map<String, S> activatedByName = new HashMap<>();
