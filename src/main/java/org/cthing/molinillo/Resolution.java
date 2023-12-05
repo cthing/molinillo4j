@@ -1069,7 +1069,7 @@ public class Resolution<R, S> {
         assert existingVertex != null;
 
         if (existingVertex.getPayload().isPresent()) {
-            debug(getDepth(), "Found existing spec (%s)", existingVertex.getPayload());
+            debug(getDepth(), "Found existing spec (%s)", existingVertex.getPayload().get());
             attemptToFilterExistingSpec(existingVertex);
         } else {
             @Nullable final S latest = getPossibility().getLatestVersion();
@@ -1106,7 +1106,7 @@ public class Resolution<R, S> {
             pushStateForRequirements(newRequirements, false);
         } else {
             createConflict(null);
-            debug(getDepth(), "Unsatisfied by existing spec (%s)", vertex.getPayload());
+            debug(getDepth(), "Unsatisfied by existing spec (%s)", vertex.getPayload().orElseThrow());
             unwindForConflict();
         }
     }

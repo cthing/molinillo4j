@@ -30,6 +30,7 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     private static final Map<String, Map<String, TestSpecification[]>> SPECS_FROM_FIXTURE = new HashMap<>();
 
     private final Map<String, TestSpecification[]> specs;
+    private final Map<TestRequirement, List<TestSpecification>> searchResults = new HashMap<>();
 
     public TestIndex(final Map<String, TestSpecification[]> specsByName) {
         this.specs = specsByName;
@@ -86,14 +87,16 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
 
     @Override
     public List<TestSpecification> searchFor(final TestRequirement dependency) {
-        final TestDependency testDependency = dependency.getDependency();
-        final TestSpecification[] testSpecs = this.specs.get(testDependency.getName());
-        if (testSpecs == null) {
-            return List.of();
-        }
-        return Arrays.stream(testSpecs)
-                     .filter(spec -> testDependency.getVersionConstraint().allows(spec.getVersion()))
-                     .collect(Collectors.toList());
+        return this.searchResults.computeIfAbsent(dependency, dep -> {
+            final TestDependency testDependency = dep.getDependency();
+            final TestSpecification[] testSpecs = this.specs.get(testDependency.getName());
+            if (testSpecs == null) {
+                return List.of();
+            }
+            return Arrays.stream(testSpecs)
+                         .filter(spec -> testDependency.getVersionConstraint().allows(spec.getVersion()))
+                         .collect(Collectors.toList());
+        });
     }
 
     @Override

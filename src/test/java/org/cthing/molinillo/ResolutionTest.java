@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.cthing.molinillo.errors.CircularDependencyError;
 import org.cthing.molinillo.errors.ResolverError;
 import org.cthing.molinillo.errors.VersionConflictError;
+import org.cthing.molinillo.fixtures.BundlerNoPenaltyTestIndex;
 import org.cthing.molinillo.fixtures.BundlerTestIndex;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestIndex;
@@ -25,7 +26,9 @@ public class ResolutionTest {
 
     private static final List<Class<? extends TestIndex>> INDEX_CLASSES = List.of(
             TestIndex.class,
-            BundlerTestIndex.class
+            BundlerTestIndex.class,
+            BundlerNoPenaltyTestIndex.class,
+            BundlerReverseTestIndex.class
     );
 
     @TestFactory
