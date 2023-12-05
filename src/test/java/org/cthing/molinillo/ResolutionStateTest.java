@@ -88,7 +88,7 @@ public class ResolutionStateTest {
     public void testPossibilities() {
         final PossibilitySet<String, String> possibilitySet = new PossibilitySet<>(Set.of("dep1"), List.of("pos1"));
         final List<PossibilitySet<String, String>> possilibilites = List.of(possibilitySet);
-        this.resolutionState.setPossibilities(possilibilites);
+        this.resolutionState.getPossibilities().addAll(possilibilites);
         assertThat(this.resolutionState.getPossibilities()).isEqualTo(possilibilites);
     }
 

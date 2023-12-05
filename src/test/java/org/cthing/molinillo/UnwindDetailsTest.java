@@ -51,7 +51,7 @@ public class UnwindDetailsTest {
                                                                               requirementTree, conflictingRequirements,
                                                                               requirementTrees,
                                                                               requirementsUnwoundToInstead);
-            assertThat(details1.reversedRequirementTreeIndex()).isEqualTo(999_999);
+            assertThat(details1.reversedRequirementTreeIndex()).isEqualTo(-1);
         }
 
         @Test
@@ -83,7 +83,7 @@ public class UnwindDetailsTest {
                                                                               requirementTree, conflictingRequirements,
                                                                               requirementTrees,
                                                                               requirementsUnwoundToInstead);
-            assertThat(details1.reversedRequirementTreeIndex()).isEqualTo(999_999);
+            assertThat(details1.reversedRequirementTreeIndex()).isEqualTo(-1);
         }
     }
 
@@ -194,7 +194,7 @@ public class UnwindDetailsTest {
     public void testEquality() {
         EqualsVerifier.forClass(UnwindDetails.class)
                       .usingGetClass()
-                      .suppress(Warning.ALL_FIELDS_SHOULD_BE_USED)
+                      .suppress(Warning.ALL_FIELDS_SHOULD_BE_USED, Warning.NONFINAL_FIELDS)
                       .verify();
     }
 }

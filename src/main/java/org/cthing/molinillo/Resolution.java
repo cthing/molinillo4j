@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -420,6 +421,7 @@ public class Resolution<R, S> {
      */
     private PossibilitySet<R, S> getPossibility() {
         final List<PossibilitySet<R, S>> possibilities = getPossibilities();
+        assert !possibilities.isEmpty();
         return possibilities.get(possibilities.size() - 1);
     }
 
@@ -456,22 +458,24 @@ public class Resolution<R, S> {
         final List<UnwindDetails<R, S>> unwindOptions = new ArrayList<>(getUnusedUnwindOptions());
         debug(getDepth(), "Unwinding for conflict: %s to %d", getRequirement(), detailsForUnwind.getStateIndex() / 2);
 
-        final Map<String, Conflict<R, S>> c = new HashMap<>(getConflicts());
+        final Map<String, Conflict<R, S>> conflicts = getConflicts();
         final List<ResolutionState<R, S>> statesToSlice = this.states.subList(detailsForUnwind.getStateIndex() + 1,
                                                                               this.states.size());
         final List<ResolutionState<R, S>> slicedStates = new ArrayList<>(statesToSlice);
         statesToSlice.clear();
-        raiseErrorUnlessState(c);
+        raiseErrorUnlessState(conflicts);
 
         if (!slicedStates.isEmpty()) {
-            getActivated().rewindTo(slicedStates.get(0));
-        } else {
-            getActivated().rewindTo(INITIAL_STATE);
+            if (slicedStates.get(0) == null) {
+                getActivated().rewindTo(INITIAL_STATE);
+            } else {
+                getActivated().rewindTo(slicedStates.get(0));
+            }
         }
 
         final ResolutionState<R, S> state = getState();
         assert state != null;
-        state.setConflicts(c);
+        state.setConflicts(conflicts);
         state.setUnusedUnwindOptions(unwindOptions);
 
         filterPossibilitiesAfterUnwind(detailsForUnwind);
@@ -491,18 +495,20 @@ public class Resolution<R, S> {
      * @param conflicts Conflicts for the error
      */
     private void raiseErrorUnlessState(final Map<String, Conflict<R, S>> conflicts) {
-        if (getState() == null) {
-            final Optional<RuntimeException> underlyingError = conflicts.values()
-                                                                        .stream()
-                                                                        .map(Conflict::getUnderlyingError)
-                                                                        .filter(Objects::nonNull)
-                                                                        .findFirst();
+        if (getState() != null) {
+            return;
+        }
 
-            if (underlyingError.isPresent()) {
-                throw underlyingError.get();
-            } else {
-                throw new VersionConflictError(conflicts, getSpecificationProvider());
-            }
+        final Optional<RuntimeException> underlyingError = conflicts.values()
+                                                                    .stream()
+                                                                    .map(Conflict::getUnderlyingError)
+                                                                    .filter(Objects::nonNull)
+                                                                    .findFirst();
+
+        if (underlyingError.isPresent()) {
+            throw underlyingError.get();
+        } else {
+            throw new VersionConflictError(conflicts, getSpecificationProvider());
         }
     }
 
@@ -540,10 +546,10 @@ public class Resolution<R, S> {
                                             if (diffReqs.size() == allRequirementsSize) {
                                                 return false;
                                             }
-                                            currentDetailHolder.currentDetail =
-                                                    alternative.compareTo(currentDetailHolder.currentDetail) > 0
-                                                    ? alternative
-                                                    : currentDetailHolder.currentDetail;
+                                            // Find the highest index unwind while looping through
+                                            if (alternative.compareTo(currentDetailHolder.currentDetail) > 0) {
+                                                currentDetailHolder.currentDetail = alternative;
+                                            }
                                             return true;
                                         })
                                         .toList();
@@ -564,12 +570,12 @@ public class Resolution<R, S> {
             }
         }
 
-        unwindDetails.forEach(d -> {
+        for (final UnwindDetails<R, S> d : unwindDetails) {
             @Nullable final R req = currentDetailHolder.currentDetail.getStateRequirement();
             if (!d.getRequirementsUnwoundToInstead().contains(req)) {
                 d.getRequirementsUnwoundToInstead().add(req);
             }
-        });
+        }
 
         return currentDetailHolder.currentDetail;
     }
@@ -622,7 +628,8 @@ public class Resolution<R, S> {
                     partialTree.add(0, grandparentR);
                     requirementState = findStateFor(grandparentR);
                     assert requirementState != null;
-                    if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(r))) {
+                    final R pR = parentR;
+                    if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(pR))) {
                         unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState),
                                                               grandparentR, partialTree, bindingRequirements, trees,
                                                               new ArrayList<>()));
@@ -751,7 +758,7 @@ public class Resolution<R, S> {
         assert state != null;
         state.getPossibilities()
              .removeIf(possibilitySet -> !allowedPossibilitySets.contains(possibilitySet)
-                     && possibilitySet.getDependencies().containsAll(requirementsToAvoid));
+                     && new HashSet<>(possibilitySet.getDependencies()).equals(new HashSet<>(requirementsToAvoid)));
     }
 
 
@@ -769,8 +776,7 @@ public class Resolution<R, S> {
         getActivated().tag(SWAP);
 
         if (getActivated().vertexNamed(name) != null) {
-            final Payload<R, S> payload = new Payload<>(possibility);
-            getActivated().setPayload(name, payload);
+            getActivated().setPayload(name, new Payload<>(possibility));
         }
         final boolean satisfied = requirements.stream()
                                               .allMatch(requirement -> requirementSatisfiedBy(requirement,
@@ -789,13 +795,14 @@ public class Resolution<R, S> {
      * @return Minimal list of requirements that would cause the specified conflict.
      */
     private List<R> bindingRequirementsForConflict(final Conflict<R, S> conflict) {
-        final List<R> result = new ArrayList<>();
         if (conflict.getPossibility() == null) {
+            final List<R> result = new ArrayList<>();
             result.add(conflict.getRequirement());
             return result;
         }
 
-        final List<R> possibleBindingRequirements = conflict.getRequirements().values()
+        final List<R> possibleBindingRequirements = conflict.getRequirements()
+                                                            .values()
                                                             .stream()
                                                             .flatMap(Collection::stream)
                                                             .distinct()
@@ -814,24 +821,27 @@ public class Resolution<R, S> {
         if (bindingRequirementInSet(null, possibleBindingRequirements, possibilities)) {
             // If all the requirements together do not filter out all possibilities, then the only two requirements needed
             // to be considered are the initial one (where the dependency's version was first chosen) and the last one.
+            final List<R> result = new ArrayList<>();
             result.add(conflict.getRequirement());
             result.add(requirementForExistingName(nameForDependency(conflict.getRequirement())));
             result.removeIf(Objects::isNull);
-        } else {
-            // Loop through the possible binding requirements, removing each one that does not bind. Iterate in reverse
-            // because we want the earliest set of binding requirements, and refine the array on each iteration.
-            final List<R> bindingRequirements = new ArrayList<>(possibleBindingRequirements);
-            final List<R> toRemove =
-                    bindingRequirements.stream()
-                                       .filter(req -> !req.equals(conflict.getRequirement())
-                                               && !bindingRequirementInSet(req, bindingRequirements, possibilities))
-                                       .toList();
-
-            bindingRequirements.removeAll(toRemove);
-            result.addAll(bindingRequirements);
+            return result;
         }
 
-        return result;
+        // Loop through the possible binding requirements, removing each one that does not bind. Iterate in reverse
+        // because we want the earliest set of binding requirements, and refine the array on each iteration.
+        final List<R> bindingRequirements = new ArrayList<>(possibleBindingRequirements);
+        for (int i = possibleBindingRequirements.size() - 1; i >= 0; i--) {
+            final R req = possibleBindingRequirements.get(i);
+            if (req.equals(conflict.getRequirement())) {
+                continue;
+            }
+            final boolean inSet = bindingRequirementInSet(req, bindingRequirements, possibilities);
+            if (!inSet) {
+                bindingRequirements.remove(req);
+            }
+        }
+        return bindingRequirements;
     }
 
     /**
@@ -875,12 +885,12 @@ public class Resolution<R, S> {
         if (index < 0 || index >= this.states.size()) {
             return null;
         }
-        final ResolutionState<R, S> resolutionState = this.states.get(index);
-        if (resolutionState == null) {
+        final ResolutionState<R, S> parentState = this.states.get(index);
+        if (parentState == null) {
             return null;
         }
 
-        return resolutionState.getRequirement();
+        return parentState.getRequirement();
     }
 
     /**
@@ -967,9 +977,9 @@ public class Resolution<R, S> {
 
         @Nullable final R requirement = getRequirement();
         assert requirement != null;
-        final Optional<Payload<R, S>> payload = vertex.getPayload();
-        @Nullable final S existingSpecification = payload.map(rsPayload -> rsPayload.getPossibilitySet().getLatestVersion())
-                                                         .orElse(null);
+        @Nullable final S existingSpecification = vertex.getPayload()
+                                                        .map(payload -> payload.getPossibilitySet().getLatestVersion())
+                                                        .orElse(null);
         @Nullable final PossibilitySet<R, S> possibilitySet = getPossibilities().isEmpty()
                                                               ? null
                                                               : getPossibilities().get(getPossibilities().size() - 1);

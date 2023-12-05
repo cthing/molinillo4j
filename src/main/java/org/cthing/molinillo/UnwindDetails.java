@@ -30,6 +30,8 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
 
     private final List<R> requirementsUnwoundToInstead;
 
+    private int reversedTreeIndex = -100;
+
     @Nullable
     private List<R> requirementsToAvoid;
 
@@ -119,15 +121,16 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      * @return Index of the state requirement.
      */
     public int reversedRequirementTreeIndex() {
-        if (this.stateRequirement != null) {
-            final List<R> reversedRequirementTree = new ArrayList<>(this.requirementTree);
-            Collections.reverse(reversedRequirementTree);
-            final int index = reversedRequirementTree.indexOf(this.stateRequirement);
-            if (index != -1) {
-                return index;
+        if (this.reversedTreeIndex < 0) {
+            if (this.stateRequirement != null) {
+                final List<R> reversedRequirementTree = new ArrayList<>(this.requirementTree);
+                Collections.reverse(reversedRequirementTree);
+                this.reversedTreeIndex = reversedRequirementTree.indexOf(this.stateRequirement);
+            } else {
+                this.reversedTreeIndex = -1;
             }
         }
-        return 999_999;
+        return this.reversedTreeIndex;
     }
 
     /**
@@ -152,7 +155,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
             this.requirementsToAvoid = new ArrayList<>();
             for (final List<R> tree : this.requirementTrees) {
                 final int index = tree.indexOf(this.stateRequirement);
-                if (index != -1 && index < tree.size() - 1) {
+                if (index != -1 && index < (tree.size() - 1)) {
                     this.requirementsToAvoid.add(tree.get(index + 1));
                 }
             }
@@ -202,12 +205,13 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
             return 1;
         }
         if (this.stateIndex == other.stateIndex) {
-            return Integer.compare(this.reversedRequirementTreeIndex(), other.reversedRequirementTreeIndex());
+            return Integer.compare(reversedRequirementTreeIndex(), other.reversedRequirementTreeIndex());
         }
         return -1;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
@@ -216,13 +220,12 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
             return false;
         }
 
-        final UnwindDetails<?, ?> that = (UnwindDetails<?, ?>)obj;
-        return this.stateIndex == that.stateIndex
-                && this.reversedRequirementTreeIndex() == that.reversedRequirementTreeIndex();
+        final UnwindDetails<R, S> that = (UnwindDetails<R, S>)obj;
+        return compareTo(that) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.stateIndex, this.reversedRequirementTreeIndex());
+        return Objects.hash(this.stateIndex, reversedRequirementTreeIndex());
     }
 }

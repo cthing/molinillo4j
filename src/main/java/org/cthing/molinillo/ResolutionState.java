@@ -25,7 +25,7 @@ public class ResolutionState<R, S> {
     @Nullable
     private R requirement;
 
-    private List<PossibilitySet<R, S>> possibilities;
+    private final List<PossibilitySet<R, S>> possibilities;
 
     private int depth;
 
@@ -148,15 +148,6 @@ public class ResolutionState<R, S> {
      */
     public List<PossibilitySet<R, S>> getPossibilities() {
         return this.possibilities;
-    }
-
-    /**
-     * Sets the possibilities to satisfy the current requirement.
-     *
-     * @param possibilities Possibilities to satisfy the current requirement
-     */
-    public void setPossibilities(final List<PossibilitySet<R, S>> possibilities) {
-        this.possibilities = possibilities;
     }
 
     /**

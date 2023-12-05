@@ -47,9 +47,7 @@ public class DependencyState<R, S> extends ResolutionState<R, S> {
         if (possibilities.isEmpty()) {
             possibility = null;
         } else {
-            final List<PossibilitySet<R, S>> newPossibilities = new ArrayList<>(possibilities);
-            possibility = newPossibilities.remove(newPossibilities.size() - 1);
-            setPossibilities(newPossibilities);
+            possibility = possibilities.remove(possibilities.size() - 1);
         }
         final PossibilityState<R, S> state = new PossibilityState<>(getName(),
                                                                     new ArrayList<>(getRequirements()),
