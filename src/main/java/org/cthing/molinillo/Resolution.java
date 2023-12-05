@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -756,7 +755,7 @@ public class Resolution<R, S> {
      * Indicates whether the specified possibility satisfies all the specified requirements.
      *
      * @param possibility Possibility to test
-     * @param requirements Requirements that the specified possibility my satisfy
+     * @param requirements Requirements that the specified possibility may satisfy
      * @return {@code true} if the specified possibility satisfies all the specified requirements.
      * @throws NoSuchDependencyError if an error has occurred
      */
@@ -938,7 +937,9 @@ public class Resolution<R, S> {
             requirements.put(nameForExplicitDependencySource(), vertex.getExplicitRequirements());
         }
         if (lockedRequirement != null) {
-            requirements.put(nameForLockingDependencySource(), Set.of(lockedRequirement));
+            final Set<R> lockedRequirements = new LinkedHashSet<>();
+            lockedRequirements.add(lockedRequirement);
+            requirements.put(nameForLockingDependencySource(), lockedRequirements);
         }
         for (final Edge<Payload<R, S>, R> edge : vertex.getIncomingEdges()) {
             final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().orElseThrow().getPossibilitySet();
@@ -980,9 +981,7 @@ public class Resolution<R, S> {
      */
     private List<List<R>> requirementTrees() {
         final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName());
-        if (vertex == null) {
-            return new ArrayList<>();
-        }
+        assert vertex != null;
 
         return vertex.requirements()
                      .stream()
@@ -997,15 +996,15 @@ public class Resolution<R, S> {
      * @return Requirements which led to the specified requirement being required
      */
     private List<R> requirementTreeFor(final R requirement) {
-        final LinkedList<R> tree = new LinkedList<>();
+        final List<R> tree = new ArrayList<>();
 
         @Nullable R req = requirement;
         while (req != null) {
-            tree.push(req);
+            tree.add(0, req);
             req = parentOf(req);
         }
 
-        return new ArrayList<>(tree);
+        return tree;
     }
 
     /**
@@ -1178,7 +1177,7 @@ public class Resolution<R, S> {
     private void pushStateForRequirements(final Set<R> newRequirements, final boolean requiresSort,
                                           final DependencyGraph<Payload<R, S>, R> newActivated) {
         final List<R> sortedRequirements = requiresSort
-                                           ? sortDependencies(new ArrayList<>(new LinkedHashSet<>(newRequirements)),
+                                           ? sortDependencies(new ArrayList<>(newRequirements),
                                                               newActivated, new HashMap<>(getConflicts()))
                                            : new ArrayList<>(newRequirements);
 
@@ -1198,9 +1197,9 @@ public class Resolution<R, S> {
         final String newName = newRequirement != null ? nameForDependency(newRequirement) : "";
         final List<PossibilitySet<R, S>> possibilities = possibilitiesForRequirement(newRequirement, newActivated);
 
-        final DependencyState<R, S> newState = new DependencyState<>(newName, new ArrayList<>(sortedRequirements),
+        final DependencyState<R, S> newState = new DependencyState<>(newName, sortedRequirements,
                                                                      newActivated, newRequirement,
-                                                                     new ArrayList<>(possibilities), getDepth(),
+                                                                     possibilities, getDepth(),
                                                                      new HashMap<>(getConflicts()),
                                                                      new ArrayList<>(getUnusedUnwindOptions()));
 
@@ -1287,7 +1286,7 @@ public class Resolution<R, S> {
             if (currentPossibilitySet != null && currentPossibilitySet.getDependencies().equals(dependencies)) {
                 currentPossibilitySet.getPossibilities().add(0, possibility);
             } else {
-                currentPossibilitySet = new PossibilitySet<>(dependencies, Collections.singletonList(possibility));
+                currentPossibilitySet = new PossibilitySet<>(dependencies, List.of(possibility));
                 possibilitySets.add(0, currentPossibilitySet);
             }
         }
