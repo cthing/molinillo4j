@@ -45,7 +45,7 @@ public class TestCaseTest {
 
     @Test
     public void testResolve() {
-        final TestCase testCase = TestCase.fromFixture("fixed_circular");
+        final TestCase testCase = TestCase.fromFixture("complex_conflict");
         final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> result =
                 testCase.resolve(BundlerReverseTestIndex.class);
         assertThat(result).isEqualTo(testCase.getResult());

@@ -66,7 +66,7 @@ public class BundlerTestIndex extends TestIndex {
 
     protected long amountConstrained(final TestRequirement dependency) {
         return this.amountConstrained.computeIfAbsent(dependency.getName(), key -> {
-            final long all = getSpecs().get(dependency.getName()).length;
+            final long all = getSpecs().computeIfAbsent(dependency.getName(), k -> new TestSpecification[0]).length;
             if (all <= 1) {
                 return all - ALL_LEQ_ONE_PENALTY;
             }

@@ -3,7 +3,6 @@ package org.cthing.molinillo.fixtures;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -62,7 +61,7 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     }
 
     public Map<String, TestSpecification[]> getSpecs() {
-        return Collections.unmodifiableMap(this.specs);
+        return this.specs;
     }
 
     @Override
@@ -89,10 +88,8 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     public List<TestSpecification> searchFor(final TestRequirement dependency) {
         return this.searchResults.computeIfAbsent(dependency, dep -> {
             final TestDependency testDependency = dep.getDependency();
-            final TestSpecification[] testSpecs = this.specs.get(testDependency.getName());
-            if (testSpecs == null) {
-                return List.of();
-            }
+            final TestSpecification[] testSpecs = this.specs.computeIfAbsent(testDependency.getName(),
+                                                                             key -> new TestSpecification[0]);
             return Arrays.stream(testSpecs)
                          .filter(spec -> testDependency.getVersionConstraint().allows(spec.getVersion()))
                          .collect(Collectors.toList());

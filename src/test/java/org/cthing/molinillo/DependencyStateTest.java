@@ -1,5 +1,6 @@
 package org.cthing.molinillo;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,7 +55,8 @@ public class DependencyStateTest {
         final String requirement = "def";
         final PossibilitySet<String, String> possibilitySet1 = new PossibilitySet<>(Set.of("dep1"), List.of("pos1"));
         final PossibilitySet<String, String> possibilitySet2 = new PossibilitySet<>(Set.of("dep2"), List.of("pos2"));
-        final List<PossibilitySet<String, String>> possilibilites = List.of(possibilitySet1, possibilitySet2);
+        final List<PossibilitySet<String, String>> possilibilites =
+                new ArrayList<>(List.of(possibilitySet1, possibilitySet2));
         final int depth = 2;
         final Conflict<String, String> conflict = mock(Conflict.class);
         final Map<String, Conflict<String, String>> conflicts = Map.of("conflict1", conflict);

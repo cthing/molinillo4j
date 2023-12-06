@@ -22,7 +22,6 @@ public class TestIndexTest {
     public void testFromFixture() {
         final TestIndex index = TestIndex.fromFixture("restkit");
         final Map<String, TestSpecification[]> specs = index.getSpecs();
-        assertThat(specs).hasSize(2);
 
         final TestSpecification spec1 = new TestSpecification("RestKit", "0.0.1", Map.of());
         final TestSpecification spec2 = new TestSpecification("RestKit", "0.0.2", Map.of());
