@@ -383,16 +383,18 @@ public class Resolution<R, S> {
 
         final ResolutionState<R, S> state = getState();
         if (state != null) {
-            final Function<Boolean, String> payloads =
-                    empty -> getActivated().getVertices()
-                                           .values()
-                                           .stream()
-                                           .filter(vertex -> empty == vertex.getPayload().isEmpty())
-                                           .map(vertex -> vertex.getPayload().orElseThrow().toString())
-                                           .collect(Collectors.joining(", "));
-
-            debug(0, "Unactivated: %s", payloads.apply(Boolean.TRUE));
-            debug(0, "Activated: %s", payloads.apply(Boolean.FALSE));
+            debug(0, "Unactivated: %s", getActivated().getVertices()
+                                                      .values()
+                                                      .stream()
+                                                      .filter(vertex -> vertex.getPayload().isEmpty())
+                                                      .map(Vertex::getName)
+                                                      .collect(Collectors.joining(", ")));
+            debug(0, "Activated: %s", getActivated().getVertices()
+                                                    .values()
+                                                    .stream()
+                                                    .filter(vertex -> vertex.getPayload().isPresent())
+                                                    .map(vertex -> vertex.getPayload().orElseThrow().toString())
+                                                    .collect(Collectors.joining(", ")));
         }
     }
 
