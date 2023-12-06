@@ -941,6 +941,7 @@ public class Resolution<R, S> {
      * @param underlyingError Error causing the conflict
      * @return Newly constructed conflict object.
      */
+    @SuppressWarnings({ "Convert2streamapi", "UnusedReturnValue" })
     private Conflict<R, S> createConflict(@Nullable final RuntimeException underlyingError) {
         final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName());
         assert vertex != null;
@@ -1206,14 +1207,10 @@ public class Resolution<R, S> {
                 requirement -> this.states.stream()
                                           .noneMatch(state -> Objects.equals(state.getRequirement(), requirement));
 
-        @Nullable R newRequirement = null;
-        while (!sortedRequirements.isEmpty()) {
-            newRequirement = sortedRequirements.remove(0);
-
-            if (isRequirementUnique.apply(newRequirement)) {
-                break;
-            }
-        }
+        @Nullable R newRequirement;
+        do {
+            newRequirement = sortedRequirements.isEmpty() ? null : sortedRequirements.remove(0);
+        } while (newRequirement != null && !isRequirementUnique.apply(newRequirement));
 
         final String newName = newRequirement != null ? nameForDependency(newRequirement) : "";
         final List<PossibilitySet<R, S>> possibilities = possibilitiesForRequirement(newRequirement, newActivated);
