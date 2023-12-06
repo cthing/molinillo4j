@@ -10,6 +10,7 @@ import org.cthing.molinillo.errors.ResolverError;
 import org.cthing.molinillo.errors.VersionConflictError;
 import org.cthing.molinillo.fixtures.BundlerNoPenaltyTestIndex;
 import org.cthing.molinillo.fixtures.BundlerTestIndex;
+import org.cthing.molinillo.fixtures.CocoaPodsTestIndex;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestIndex;
 import org.cthing.molinillo.fixtures.TestRequirement;
@@ -28,7 +29,8 @@ public class ResolutionTest {
             TestIndex.class,
             BundlerTestIndex.class,
             BundlerNoPenaltyTestIndex.class,
-            BundlerReverseTestIndex.class
+            BundlerReverseTestIndex.class,
+            CocoaPodsTestIndex.class
     );
 
     @TestFactory
