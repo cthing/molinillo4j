@@ -24,7 +24,7 @@ public class ConsoleUI implements UI {
 
     @Override
     public void indicateProgress() {
-        if (!isDebugMode()) {
+        if (isDebugMode()) {
             WRITER.print('.');
         }
     }
@@ -36,12 +36,16 @@ public class ConsoleUI implements UI {
 
     @Override
     public void beforeResolution() {
-        WRITER.println("Resolving dependencies...");
+        if (isDebugMode()) {
+            WRITER.println("Resolving dependencies...");
+        }
     }
 
     @Override
     public void afterResolution() {
-        WRITER.println();
+        if (isDebugMode()) {
+            WRITER.println();
+        }
     }
 
     @Override

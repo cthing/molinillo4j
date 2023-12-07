@@ -129,7 +129,6 @@ public class Resolution<R, S> {
                           getPossibilities().size());
                     final PossibilityState<R, S> possibilityState = dependencyState.popPossibilityState();
                     this.states.add(possibilityState);
-                    getActivated().tag(possibilityState);
                 }
 
                 processTopmostState();
@@ -1161,7 +1160,7 @@ public class Resolution<R, S> {
     private void requireNestedDependenciesFor(final PossibilitySet<R, S> possibilitySet) {
         @Nullable final S latestVersion = possibilitySet.getLatestVersion();
         assert latestVersion != null;
-        final Set<R> nestedDependencies = dependenciesFor(latestVersion);
+        final Set<R> nestedDependencies = possibilitySet.getDependencies();
         debug(getDepth(), "Requiring nested dependencies (%s)", nestedDependencies.stream()
                                                                                   .map(Object::toString)
                                                                                   .collect(Collectors.joining(", ")));

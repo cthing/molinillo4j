@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.cthing.molinillo.errors.CircularDependencyError;
 import org.cthing.molinillo.errors.ResolverError;
 import org.cthing.molinillo.errors.VersionConflictError;
+import org.cthing.molinillo.fixtures.BerkshelfTestIndex;
 import org.cthing.molinillo.fixtures.BundlerNoPenaltyTestIndex;
 import org.cthing.molinillo.fixtures.BundlerTestIndex;
 import org.cthing.molinillo.fixtures.CocoaPodsTestIndex;
@@ -30,7 +31,8 @@ public class ResolutionTest {
             BundlerTestIndex.class,
             BundlerNoPenaltyTestIndex.class,
             BundlerReverseTestIndex.class,
-            CocoaPodsTestIndex.class
+            CocoaPodsTestIndex.class,
+            BerkshelfTestIndex.class
     );
 
     @TestFactory

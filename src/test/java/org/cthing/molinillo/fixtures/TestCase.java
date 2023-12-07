@@ -122,7 +122,7 @@ public final class TestCase {
         }
 
         final ConsoleUI consoleUi = new ConsoleUI();
-        consoleUi.setDebugMode(true);
+        //consoleUi.setDebugMode(true);
         final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(testIndex, consoleUi,
                                                                                          getRequested(), getBase());
         return resolver.resolve();
