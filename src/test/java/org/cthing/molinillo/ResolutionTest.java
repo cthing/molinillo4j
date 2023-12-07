@@ -12,6 +12,7 @@ import org.cthing.molinillo.fixtures.BerkshelfTestIndex;
 import org.cthing.molinillo.fixtures.BundlerNoPenaltyTestIndex;
 import org.cthing.molinillo.fixtures.BundlerTestIndex;
 import org.cthing.molinillo.fixtures.CocoaPodsTestIndex;
+import org.cthing.molinillo.fixtures.RandomTestIndex;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestIndex;
 import org.cthing.molinillo.fixtures.TestRequirement;
@@ -32,14 +33,27 @@ public class ResolutionTest {
             BundlerNoPenaltyTestIndex.class,
             BundlerReverseTestIndex.class,
             CocoaPodsTestIndex.class,
-            BerkshelfTestIndex.class
+            BerkshelfTestIndex.class,
+            RandomTestIndex.class
     );
+
+    private static boolean ignoreTest(final Class<? extends TestIndex> indexClass, final TestCase testCase) {
+        // This index occasionally finds orders that are very slow to resolve (e.g. seconds to minutes).
+        // This is a problem in the Molinillo algorithm and the Molinillo project team has not found a
+        // way to speed it up yet.
+        return indexClass.equals(RandomTestIndex.class)
+                && "complex_conflict_unwinding.json".equals(testCase.getFixture().getName());
+    }
 
     @TestFactory
     public List<DynamicTest> resolveTestFactory() {
         final List<DynamicTest> tests = new ArrayList<>();
         for (final Class<? extends TestIndex> indexClass : INDEX_CLASSES) {
             for (final TestCase testCase : TestCase.all()) {
+                if (indexClass.equals(RandomTestIndex.class) && "resolves a conflict which requires non-trivial unwinding".equals(testCase.getName())) {
+                    continue;
+                }
+
                 final String testName = indexClass.getSimpleName() + ": " + testCase.getName()
                         + " (" + testCase.getFixture().getName() + ")";
                 final DynamicTest dynamicTest =

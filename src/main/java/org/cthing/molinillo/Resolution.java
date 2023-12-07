@@ -481,13 +481,9 @@ public class Resolution<R, S> {
 
         filterPossibilitiesAfterUnwind(detailsForUnwind);
 
-        final int index = this.states.size() - 1;
-
-        for (final Map.Entry<R, List<Integer>> entry : this.parentsOf.entrySet()) {
-            entry.getValue().removeIf(i -> i >= index);
-        }
-
-        state.getUnusedUnwindOptions().removeIf(uw -> uw.getStateIndex() >= index);
+        final int lastStateIndex = this.states.size() - 1;
+        this.parentsOf.forEach((key, stateIndices) -> stateIndices.removeIf(stateIndex -> stateIndex >= lastStateIndex));
+        state.getUnusedUnwindOptions().removeIf(uw -> uw.getStateIndex() >= lastStateIndex);
     }
 
     /**
