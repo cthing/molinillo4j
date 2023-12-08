@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.annotation.Nullable;
 
@@ -345,29 +346,6 @@ public class Resolution<R, S> {
         this.resolverUi.beforeResolution();
     }
 
-    private DependencyGraph<Payload<R, S>, R> resolveActivatedSpecs() {
-        for (final Map.Entry<String, Vertex<Payload<R, S>, R>> entry : getActivated().getVertices().entrySet()) {
-            final Vertex<Payload<R, S>, R> vertex = entry.getValue();
-            if (vertex.getPayload().isPresent()) {
-                final PossibilitySet<R, S> possibilitySet = vertex.getPayload().get().getPossibilitySet();
-                final List<S> possibilities = new ArrayList<>(possibilitySet.getPossibilities());
-                Collections.reverse(possibilities);
-                final S latestVersion =
-                        possibilities.stream()
-                                     .filter(possibility -> vertex.requirements()
-                                                                  .stream()
-                                                                  .allMatch(requirement -> requirementSatisfiedBy(requirement,
-                                                                                                                  getActivated(),
-                                                                                                                  possibility)))
-                                     .findFirst()
-                                     .orElseThrow();
-                getActivated().setPayload(vertex.getName(), new Payload<>(latestVersion));
-            }
-        }
-
-        return getActivated();
-    }
-
     /**
      * Ends the resolution process.
      */
@@ -395,6 +373,25 @@ public class Resolution<R, S> {
                                                     .map(vertex -> vertex.getPayload().orElseThrow().toString())
                                                     .collect(Collectors.joining(", ")));
         }
+    }
+
+    private DependencyGraph<Payload<R, S>, R> resolveActivatedSpecs() {
+        for (final Vertex<Payload<R, S>, R> vertex : getActivated().getVertices().values()) {
+            vertex.getPayload().ifPresent(payload -> {
+                final List<S> possibilities = payload.getPossibilitySet().getPossibilities();
+                IntStream.iterate(possibilities.size() - 1, i -> i >= 0, i -> i - 1)
+                         .mapToObj(possibilities::get)
+                         .filter(possibility -> vertex.requirements()
+                                                      .stream()
+                                                      .allMatch(requirement -> requirementSatisfiedBy(requirement,
+                                                                                                      getActivated(),
+                                                                                                      possibility)))
+                         .findFirst()
+                         .ifPresent(possibility -> vertex.setPayload(new Payload<>(possibility)));
+            });
+        }
+
+        return getActivated();
     }
 
     /**
@@ -639,16 +636,15 @@ public class Resolution<R, S> {
      */
     private boolean conflictFixingPossibilities(@Nullable final ResolutionState<R, S> state,
                                                 final List<R> bindingRequirements) {
-        if (state == null) {
-            return false;
-        }
-
-        return state.getPossibilities()
-                    .stream()
-                    .anyMatch(possibilitySet -> possibilitySet.getPossibilities()
-                                                              .stream()
-                                                              .anyMatch(poss -> possibilitySatisfiesRequirements(poss, bindingRequirements))
-        );
+        return state != null
+                && state.getPossibilities()
+                        .stream()
+                        .anyMatch(possibilitySet ->
+                                          possibilitySet.getPossibilities()
+                                                        .stream()
+                                                        .anyMatch(poss -> possibilitySatisfiesRequirements(poss,
+                                                                                                           bindingRequirements))
+                );
     }
 
 
@@ -808,8 +804,12 @@ public class Resolution<R, S> {
             // to be considered are the initial one (where the dependency's version was first chosen) and the last one.
             final List<R> result = new ArrayList<>();
             result.add(conflict.getRequirement());
-            result.add(requirementForExistingName(nameForDependency(conflict.getRequirement())));
-            result.removeIf(Objects::isNull);
+
+            @Nullable final R req = requirementForExistingName(nameForDependency(conflict.getRequirement()));
+            if (req != null) {
+                result.add(req);
+            }
+
             return result;
         }
 
@@ -818,12 +818,11 @@ public class Resolution<R, S> {
         final List<R> bindingRequirements = new ArrayList<>(possibleBindingRequirements);
         for (int i = possibleBindingRequirements.size() - 1; i >= 0; i--) {
             final R req = possibleBindingRequirements.get(i);
-            if (req.equals(conflict.getRequirement())) {
-                continue;
-            }
-            final boolean inSet = bindingRequirementInSet(req, bindingRequirements, possibilities);
-            if (!inSet) {
-                bindingRequirements.remove(req);
+            if (!req.equals(conflict.getRequirement())) {
+                final boolean inSet = bindingRequirementInSet(req, bindingRequirements, possibilities);
+                if (!inSet) {
+                    bindingRequirements.remove(req);
+                }
             }
         }
         return bindingRequirements;
@@ -1005,10 +1004,8 @@ public class Resolution<R, S> {
     private List<R> requirementTreeFor(final R requirement) {
         final List<R> tree = new ArrayList<>();
 
-        @Nullable R req = requirement;
-        while (req != null) {
+        for (@Nullable R req = requirement; req != null; req = parentOf(req)) {
             tree.add(0, req);
-            req = parentOf(req);
         }
 
         return tree;
