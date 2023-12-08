@@ -55,8 +55,7 @@ public class SetPayload<P, R> extends Action<P, R, Void> {
 
     @Override
     public Void up(final DependencyGraph<P, R> graph) {
-        final Vertex<P, R> vertex = graph.vertexNamed(this.name);
-        assert vertex != null;
+        final Vertex<P, R> vertex = graph.vertexNamed(this.name).orElseThrow();
         this.oldPayload = vertex.getPayload().orElse(null);
         vertex.setPayload(this.payload);
         return null;
@@ -64,8 +63,7 @@ public class SetPayload<P, R> extends Action<P, R, Void> {
 
     @Override
     public void down(final DependencyGraph<P, R> graph) {
-        final Vertex<P, R> vertex = graph.vertexNamed(this.name);
-        assert vertex != null;
+        final Vertex<P, R> vertex = graph.vertexNamed(this.name).orElseThrow();
         vertex.setPayload(this.oldPayload);
     }
 

@@ -79,10 +79,8 @@ public class AddEdgeNoCircular<P, R> extends Action<P, R, Edge<P, R>> {
      * @return Newly created edge
      */
     private Edge<P, R> makeEdge(final DependencyGraph<P, R> graph) {
-        final Vertex<P, R> originVertex = graph.vertexNamed(this.origin);
-        final Vertex<P, R> destinationVertex = graph.vertexNamed(this.destination);
-        assert originVertex != null;
-        assert destinationVertex != null;
+        final Vertex<P, R> originVertex = graph.vertexNamed(this.origin).orElseThrow();
+        final Vertex<P, R> destinationVertex = graph.vertexNamed(this.destination).orElseThrow();
         return new Edge<>(originVertex, destinationVertex, this.requirement);
     }
 

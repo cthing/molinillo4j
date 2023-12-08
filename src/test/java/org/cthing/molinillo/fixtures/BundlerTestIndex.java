@@ -35,14 +35,12 @@ public class BundlerTestIndex extends TestIndex {
                                                   final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
         final Function<TestRequirement, Long> payloadFunction = dep -> {
             final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
-                    activated.vertexNamed(nameForDependency(dep));
-            assert vertex != null;
+                    activated.vertexNamed(nameForDependency(dep)).orElseThrow();
             return vertex.getPayload().isPresent() ? 0L : 1L;
         };
         final Function<TestRequirement, Long> rootFunction = dep -> {
             final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
-                    activated.vertexNamed(nameForDependency(dep));
-            assert vertex != null;
+                    activated.vertexNamed(nameForDependency(dep)).orElseThrow();
             return vertex.isRoot() ? 0L : 1L;
         };
         final Function<TestRequirement, Long> constainedFunction = this::amountConstrained;
@@ -50,8 +48,7 @@ public class BundlerTestIndex extends TestIndex {
                 dep -> (conflicts.get(nameForDependency(dep)) != null) ? 0L : 1L;
         final Function<TestRequirement, Long> countFunction = dep -> {
             final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
-                    activated.vertexNamed(nameForDependency(dep));
-            assert vertex != null;
+                    activated.vertexNamed(nameForDependency(dep)).orElseThrow();
             return vertex.getPayload().isEmpty() ? searchFor(dep).size() : 0L;
         };
         final Comparator<TestRequirement> requirementComparator = Comparator.comparing(payloadFunction)

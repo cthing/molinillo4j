@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -73,8 +74,7 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
                                           final TestSpecification specification) {
         if (specification.getVersion().isPreRelease() && !requirement.isPreRelease()) {
             final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
-                    activated.vertexNamed(specification.getName());
-            assert vertex != null;
+                    activated.vertexNamed(specification.getName()).orElseThrow();
             if (vertex.requirements().stream().noneMatch(TestRequirement::isPreRelease)) {
                 return false;
             }
@@ -122,17 +122,17 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
                                                           TestRequirement> activated,
                                                   final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
         final Function<TestRequirement, Integer> payloadFunction = dep -> {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
-            return (vertex == null || vertex.getPayload().isEmpty()) ? 1 : 0;
+            return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? 1 : 0;
         };
         final Function<TestRequirement, Integer> preReleaseFunction = dep -> dep.isPreRelease() ? 0 : 1;
         final Function<TestRequirement, Integer> conflictsFunction =
                 dep -> conflicts.containsKey(nameForDependency(dep)) ? 0 : 1;
         final Function<TestRequirement, Integer> countFunction = dep -> {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
-            return (vertex == null || vertex.getPayload().isEmpty()) ? searchFor(dep).size() : 0;
+            return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? searchFor(dep).size() : 0;
         };
         final Comparator<TestRequirement> requirementComparator = Comparator.comparing(payloadFunction)
                                                                            .thenComparing(preReleaseFunction)

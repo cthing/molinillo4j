@@ -38,7 +38,7 @@ public class AddVertexTest {
     @Test
     public void testUpDownNew() {
         final DependencyGraph<String, String> graph = new DependencyGraph<>();
-        assertThat(graph.vertexNamed("abc")).isNull();
+        assertThat(graph.vertexNamed("abc")).isEmpty();
 
         final AddVertex<String, String> vertexAction = new AddVertex<>("abc", "payload", true);
 
@@ -46,10 +46,10 @@ public class AddVertexTest {
         assertThat(vertexAction.getName()).isEqualTo("abc");
         assertThat(vertexAction.getPayload()).contains("payload");
         assertThat(vertexAction.isRoot()).isTrue();
-        assertThat(graph.vertexNamed("abc")).isEqualTo(vertex);
+        assertThat(graph.vertexNamed("abc")).contains(vertex);
 
         vertexAction.down(graph);
-        assertThat(graph.vertexNamed("abc")).isNull();
+        assertThat(graph.vertexNamed("abc")).isEmpty();
     }
 
     @Test
@@ -64,13 +64,14 @@ public class AddVertexTest {
         assertThat(vertex2.getName()).isEqualTo("abc");
         assertThat(vertex2.getPayload()).contains("payload1");
         assertThat(vertex2.isRoot()).isTrue();
-        assertThat(graph.vertexNamed("abc")).isEqualTo(vertex2);
+        assertThat(graph.vertexNamed("abc")).contains(vertex2);
 
         vertexAction.down(graph);
-        final Vertex<String, String> vertex3 = graph.vertexNamed("abc");
-        assertThat(vertex3).isNotNull();
-        assertThat(vertex3.getName()).isEqualTo("abc");
-        assertThat(vertex3.getPayload()).contains("payload1");
-        assertThat(vertex3.isRoot()).isFalse();
+        assertThat(graph.vertexNamed("abc")).hasValueSatisfying(vertex3 -> {
+            assertThat(vertex3).isNotNull();
+            assertThat(vertex3.getName()).isEqualTo("abc");
+            assertThat(vertex3.getPayload()).contains("payload1");
+            assertThat(vertex3.isRoot()).isFalse();
+        });
     }
 }

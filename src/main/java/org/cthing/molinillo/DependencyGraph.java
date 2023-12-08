@@ -1,6 +1,7 @@
 package org.cthing.molinillo;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -95,17 +96,15 @@ public class DependencyGraph<P, R> {
      * @return Newly created vertex
      * @throws IllegalArgumentException if no parent vertices are specified
      */
-    public Vertex<P, R> addChildVertex(final String name, @Nullable final P payload, final List<String> parentNames,
-                                       final R requirement) {
+    public Vertex<P, R> addChildVertex(final String name, @Nullable final P payload,
+                                       final Collection<String> parentNames, final R requirement) {
         if (parentNames.isEmpty()) {
             throw new IllegalArgumentException("Parent vertices must be specified");
         }
 
         final Vertex<P, R> vertex = addVertex(name, payload, false);
         for (final String parentName : parentNames) {
-            final Vertex<P, R> parentVertex = vertexNamed(parentName);
-            assert parentVertex != null;
-            addEdge(parentVertex, vertex, requirement);
+            vertexNamed(parentName).ifPresent(parentVertex -> addEdge(parentVertex, vertex, requirement));
         }
         return vertex;
     }
@@ -137,11 +136,10 @@ public class DependencyGraph<P, R> {
      * Obtains the vertex with the specified name.
      *
      * @param name Name of the vertex to return
-     * @return Vertex with the specified name or {@code null} if not found.
+     * @return Vertex with the specified name.
      */
-    @Nullable
-    public Vertex<P, R> vertexNamed(final String name) {
-        return this.vertices.get(name);
+    public Optional<Vertex<P, R>> vertexNamed(final String name) {
+        return Optional.ofNullable(this.vertices.get(name));
     }
 
     /**

@@ -27,26 +27,26 @@ public class LogTest {
         this.log.tag(this.graph, "tag1");
 
         final Vertex<String, String> vertex1 = this.log.addVertex(this.graph, "vertex1", "payload1", false);
-        assertThat(this.graph.vertexNamed("vertex1")).isEqualTo(vertex1);
+        assertThat(this.graph.vertexNamed("vertex1")).contains(vertex1);
         assertThat(this.graph.isEmpty()).isFalse();
 
         this.log.tag(this.graph, "tag2");
 
         final Vertex<String, String> vertex2 = this.log.addVertex(this.graph, "vertex2", "payload2", false);
-        assertThat(this.graph.vertexNamed("vertex1")).isEqualTo(vertex1);
-        assertThat(this.graph.vertexNamed("vertex2")).isEqualTo(vertex2);
+        assertThat(this.graph.vertexNamed("vertex1")).contains(vertex1);
+        assertThat(this.graph.vertexNamed("vertex2")).contains(vertex2);
         assertThat(this.graph.isEmpty()).isFalse();
 
         this.log.rewindTo(this.graph, "tag2");
 
-        assertThat(this.graph.vertexNamed("vertex1")).isEqualTo(vertex1);
-        assertThat(this.graph.vertexNamed("vertex2")).isNull();
+        assertThat(this.graph.vertexNamed("vertex1")).contains(vertex1);
+        assertThat(this.graph.vertexNamed("vertex2")).isEmpty();
         assertThat(this.graph.isEmpty()).isFalse();
 
         this.log.rewindTo(this.graph, "tag1");
 
-        assertThat(this.graph.vertexNamed("vertex1")).isNull();
-        assertThat(this.graph.vertexNamed("vertex2")).isNull();
+        assertThat(this.graph.vertexNamed("vertex1")).isEmpty();
+        assertThat(this.graph.vertexNamed("vertex2")).isEmpty();
         assertThat(this.graph.isEmpty()).isTrue();
     }
 
@@ -117,11 +117,11 @@ public class LogTest {
 
         final List<Vertex<String, String>> removedVertices = this.log.detachVertexNamed(this.graph, "C");
         assertThat(removedVertices).containsExactlyInAnyOrder(vertexC, vertexD);
-        assertThat(this.graph.vertexNamed("A")).isEqualTo(vertexA);
-        assertThat(this.graph.vertexNamed("B")).isEqualTo(vertexB);
-        assertThat(this.graph.vertexNamed("E")).isEqualTo(vertexE);
-        assertThat(this.graph.vertexNamed("C")).isNull();
-        assertThat(this.graph.vertexNamed("D")).isNull();
+        assertThat(this.graph.vertexNamed("A")).contains(vertexA);
+        assertThat(this.graph.vertexNamed("B")).contains(vertexB);
+        assertThat(this.graph.vertexNamed("E")).contains(vertexE);
+        assertThat(this.graph.vertexNamed("C")).isEmpty();
+        assertThat(this.graph.vertexNamed("D")).isEmpty();
         assertThat(vertexA.getIncomingEdges()).isEmpty();
         assertThat(vertexA.getOutgoingEdges()).containsExactly(edgeAB);
         assertThat(vertexB.getIncomingEdges()).containsExactly(edgeAB);
@@ -131,11 +131,11 @@ public class LogTest {
 
         this.log.rewindTo(this.graph, "tag3");
 
-        assertThat(this.graph.vertexNamed("A")).isEqualTo(vertexA);
-        assertThat(this.graph.vertexNamed("B")).isEqualTo(vertexB);
-        assertThat(this.graph.vertexNamed("C")).isEqualTo(vertexC);
-        assertThat(this.graph.vertexNamed("D")).isEqualTo(vertexD);
-        assertThat(this.graph.vertexNamed("E")).isEqualTo(vertexE);
+        assertThat(this.graph.vertexNamed("A")).contains(vertexA);
+        assertThat(this.graph.vertexNamed("B")).contains(vertexB);
+        assertThat(this.graph.vertexNamed("C")).contains(vertexC);
+        assertThat(this.graph.vertexNamed("D")).contains(vertexD);
+        assertThat(this.graph.vertexNamed("E")).contains(vertexE);
         assertThat(vertexA.getIncomingEdges()).isEmpty();
         assertThat(vertexA.getOutgoingEdges()).containsExactlyInAnyOrder(edgeAB, edgeAC);
         assertThat(vertexB.getIncomingEdges()).containsExactly(edgeAB);

@@ -58,7 +58,7 @@ public class AbstractSpecificationProvider<R, S> implements SpecificationProvide
     public List<R> sortDependencies(final List<R> dependencies, final DependencyGraph<Payload<R, S>, R> activated,
                                     final Map<String, Conflict<R, S>> conflicts) {
         final Function<R, Integer> payloadFunction = dep -> {
-            final Vertex<Payload<R, S>, R> vertex = activated.vertexNamed(nameForDependency(dep));
+            final Vertex<Payload<R, S>, R> vertex = activated.vertexNamed(nameForDependency(dep)).orElse(null);
             return (vertex == null || vertex.getPayload().isEmpty()) ? 1 : 0;
         };
         final Function<R, Integer> conflictsFunction = dep -> conflicts.containsKey(nameForDependency(dep)) ? 0 : 1;

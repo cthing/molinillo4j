@@ -317,8 +317,7 @@ public class Resolution<R, S> {
      */
     private NoSuchDependencyError processNoSuchDependencyError(final NoSuchDependencyError error) {
         if (getState() != null) {
-            final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(nameForDependency(error.getDependency()));
-            if (vertex != null) {
+            getActivated().vertexNamed(nameForDependency(error.getDependency())).ifPresent(vertex -> {
                 error.getRequiredBy().addAll(vertex.getIncomingEdges()
                                                    .stream()
                                                    .map(e -> e.getOrigin().getName())
@@ -326,7 +325,7 @@ public class Resolution<R, S> {
                 if (!vertex.getExplicitRequirements().isEmpty()) {
                     error.getRequiredBy().add(nameForExplicitDependencySource());
                 }
-            }
+            });
         }
 
         return error;
@@ -756,9 +755,8 @@ public class Resolution<R, S> {
 
         getActivated().tag(SWAP);
 
-        if (getActivated().vertexNamed(name) != null) {
-            getActivated().setPayload(name, new Payload<>(possibility));
-        }
+        getActivated().vertexNamed(name)
+                      .ifPresent(vertex -> getActivated().setPayload(name, new Payload<>(possibility)));
         final boolean satisfied = requirements.stream()
                                               .allMatch(requirement -> requirementSatisfiedBy(requirement,
                                                                                               getActivated(),
@@ -886,8 +884,8 @@ public class Resolution<R, S> {
      */
     @Nullable
     private R requirementForExistingName(final String name) {
-        final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(name);
-        if (vertex == null || vertex.getPayload().isEmpty()) {
+        final Optional<Vertex<Payload<R, S>, R>> vertexOpt = getActivated().vertexNamed(name);
+        if (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) {
             return null;
         }
 
@@ -927,8 +925,7 @@ public class Resolution<R, S> {
      */
     @SuppressWarnings({ "Convert2streamapi", "UnusedReturnValue" })
     private Conflict<R, S> createConflict(@Nullable final RuntimeException underlyingError) {
-        final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName());
-        assert vertex != null;
+        final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName()).orElseThrow();
         @Nullable final R lockedRequirement = lockedRequirementNamed(getName());
 
         final Map<Object, Set<R>> requirements = new HashMap<>();
@@ -986,9 +983,7 @@ public class Resolution<R, S> {
      * @return Requirement trees that led to every requirement for the current specification.
      */
     private List<List<R>> requirementTrees() {
-        final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName());
-        assert vertex != null;
-
+        final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName()).orElseThrow();
         return vertex.requirements()
                      .stream()
                      .map(this::requirementTreeFor)
@@ -1048,8 +1043,7 @@ public class Resolution<R, S> {
      */
     private void attemptToActivate() {
         debug(getDepth(), "Attempting to activate %s", getPossibility());
-        final Vertex<Payload<R, S>, R> existingVertex = getActivated().vertexNamed(getName());
-        assert existingVertex != null;
+        final Vertex<Payload<R, S>, R> existingVertex = getActivated().vertexNamed(getName()).orElseThrow();
 
         if (existingVertex.getPayload().isPresent()) {
             debug(getDepth(), "Found existing spec (%s)", existingVertex.getPayload().get());
@@ -1119,8 +1113,7 @@ public class Resolution<R, S> {
      */
     @Nullable
     private R lockedRequirementNamed(final String requirementName) {
-        final Vertex<R, R> vertex = this.base.vertexNamed(requirementName);
-        return (vertex == null) ? null : vertex.getPayload().orElse(null);
+        return this.base.vertexNamed(requirementName).flatMap(Vertex::getPayload).orElse(null);
     }
 
     /**

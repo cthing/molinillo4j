@@ -52,9 +52,9 @@ public class CocoaPodsTestIndex extends TestIndex {
                                                           TestRequirement> activated,
                                                   final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
         final Function<TestRequirement, Integer> payloadFunction = dep -> {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
-            return (vertex == null || vertex.getPayload().isEmpty()) ? 1 : 0;
+            return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? 1 : 0;
         };
         final Function<TestRequirement, Integer> preReleaseFunction = dep -> dep.isPreRelease() ? 0 : 1;
         final Function<TestRequirement, Integer> conflictsFunction =
