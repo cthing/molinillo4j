@@ -109,7 +109,7 @@ public class ResolutionTest {
                              Unable to satisfy the following requirements:
 
                              - 'missing ([3.0])' required by 'user-specified dependency'""");
-        assertThat(versionConflictError.messageWithTrees(Map.of())).isEqualTo("""
+        assertThat(versionConflictError.messageWithTrees()).isEqualTo("""
                             Resolution could not find compatible versions for possibility named 'missing'
                               In user-specified dependency:
                                 missing ([3.0])""");
@@ -131,7 +131,7 @@ public class ResolutionTest {
 
                              - 'json ([1.7.7,))' required by 'berkshelf (2.0.7)'
                              - 'json ([1.4.4,1.7.7])' required by 'chef (10.26)'""");
-        assertThat(versionConflictError.messageWithTrees(Map.of())).isEqualTo("""
+        assertThat(versionConflictError.messageWithTrees()).isEqualTo("""
             Resolution could not find compatible versions for possibility named 'json'
               In user-specified dependency:
                 chef_app_error ([0,)) was resolved to chef_app_error (1.0.0), which depends on
