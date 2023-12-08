@@ -20,6 +20,10 @@
         <Class name="~.*Resolution"/>
     </Match>
     <Match>
+        <Bug pattern="UMTP_UNBOUND_METHOD_TEMPLATE_PARAMETER"/>
+        <Class name="~.*VersionConflictError"/>
+    </Match>
+    <Match>
         <Class name="~.*Test(\$.+)?"/>
     </Match>
 </FindBugsFilter>

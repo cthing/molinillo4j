@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
 
     private final Map<String, TestSpecification[]> specs;
     private final Map<TestRequirement, List<TestSpecification>> searchResults = new HashMap<>();
+    private Set<TestRequirement> allowMissingRequirements = new HashSet<>();
 
     public TestIndex(final Map<String, TestSpecification[]> specsByName) {
         this.specs = specsByName;
@@ -139,5 +141,14 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
         return dependencies.stream()
                            .sorted(requirementComparator)
                            .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean allowMissing(final TestRequirement dependency) {
+        return this.allowMissingRequirements.contains(dependency);
+    }
+
+    public void setAllowMissing(final TestRequirement... requirements) {
+        this.allowMissingRequirements = Set.of(requirements);
     }
 }
