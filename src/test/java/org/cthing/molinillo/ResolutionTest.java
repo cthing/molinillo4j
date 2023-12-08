@@ -59,8 +59,7 @@ public class ResolutionTest {
         final List<DynamicTest> tests = new ArrayList<>();
         for (final Class<? extends TestIndex> indexClass : INDEX_CLASSES) {
             for (final TestCase testCase : TestCase.all()) {
-                if (indexClass.equals(RandomTestIndex.class)
-                        && "resolves a conflict which requires non-trivial unwinding".equals(testCase.getName())) {
+                if (ignoreTest(indexClass, testCase)) {
                     continue;
                 }
 

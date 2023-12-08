@@ -482,7 +482,9 @@ public class Resolution<R, S> {
         filterPossibilitiesAfterUnwind(detailsForUnwind);
 
         final int lastStateIndex = this.states.size() - 1;
-        this.parentsOf.forEach((key, stateIndices) -> stateIndices.removeIf(stateIndex -> stateIndex >= lastStateIndex));
+        for (final List<Integer> stateIndices : this.parentsOf.values()) {
+            stateIndices.removeIf(stateIndex -> stateIndex >= lastStateIndex);
+        }
         state.getUnusedUnwindOptions().removeIf(uw -> uw.getStateIndex() >= lastStateIndex);
     }
 
@@ -520,61 +522,47 @@ public class Resolution<R, S> {
         final List<R> bindingRequirements = bindingRequirementsForConflict(currentConflict);
         final List<UnwindDetails<R, S>> unwindDetails = unwindOptionsForRequirements(bindingRequirements);
 
-        final UnwindDetails<R, S> lastDetailForCurrentUnwind = Collections.max(unwindDetails);
+        UnwindDetails<R, S> lastDetailForCurrentUnwind = Collections.max(unwindDetails);
 
-        class CurrentDetailHolder {
-            UnwindDetails<R, S> currentDetail;
-
-            CurrentDetailHolder(final UnwindDetails<R, S> currentDetail) {
-                this.currentDetail = currentDetail;
-            }
-        }
-        final CurrentDetailHolder currentDetailHolder = new CurrentDetailHolder(lastDetailForCurrentUnwind);
-
-        final List<R> allRequirements = lastDetailForCurrentUnwind.allRequirements();
+        final Set<R> allRequirements = lastDetailForCurrentUnwind.allRequirements();
         final int allRequirementsSize = allRequirements.size();
 
         // Look for past conflicts that could be unwound to affect the requirement tree for the current conflict.
-        final List<UnwindDetails<R, S>> relevantUnusedUnwinds =
-                getUnusedUnwindOptions().stream()
-                                        .filter(alternative -> {
-                                            final List<R> diffReqs = new ArrayList<>(allRequirements);
-                                            diffReqs.removeAll(alternative.getRequirementsUnwoundToInstead());
-                                            if (diffReqs.size() == allRequirementsSize) {
-                                                return false;
-                                            }
-                                            // Find the highest index unwind while looping through
-                                            if (alternative.compareTo(currentDetailHolder.currentDetail) > 0) {
-                                                currentDetailHolder.currentDetail = alternative;
-                                            }
-                                            return true;
-                                        })
-                                        .toList();
+        final List<UnwindDetails<R, S>> relevantUnusedUnwinds = new ArrayList<>();
+        for (final UnwindDetails<R, S> uw : getUnusedUnwindOptions()) {
+            if (allRequirementsSize != uw.getRequirementsUnwoundToInstead().size()
+                    || !allRequirements.containsAll(uw.getRequirementsUnwoundToInstead())) {
+                relevantUnusedUnwinds.add(uw);
+            }
+
+            // Find the highest index unwind while looping through
+            if (uw.compareTo(lastDetailForCurrentUnwind) > 0) {
+                lastDetailForCurrentUnwind = uw;
+            }
+        }
 
         // Add the current unwind options to the collection of unused unwind options. The "used" option will be
         // filtered out during "unwindForConflict".
         final ResolutionState<R, S> state = getState();
         assert state != null;
-        state.getUnusedUnwindOptions().addAll(unwindDetails.stream()
-                                                           .filter(detail -> detail.getStateIndex() != -1)
-                                                           .toList());
+        for (final UnwindDetails<R, S> detail : unwindDetails) {
+            if (detail.getStateIndex() != -1) {
+                state.getUnusedUnwindOptions().add(detail);
+            }
+        }
 
         // Update the "requirementUnwoundToInstead" on any relevant unused unwinds.
         for (final UnwindDetails<R, S> d : relevantUnusedUnwinds) {
-            @Nullable final R req = currentDetailHolder.currentDetail.getStateRequirement();
-            if (!d.getRequirementsUnwoundToInstead().contains(req)) {
-                d.getRequirementsUnwoundToInstead().add(req);
-            }
+            @Nullable final R req = lastDetailForCurrentUnwind.getStateRequirement();
+            d.getRequirementsUnwoundToInstead().add(req);
         }
 
         for (final UnwindDetails<R, S> d : unwindDetails) {
-            @Nullable final R req = currentDetailHolder.currentDetail.getStateRequirement();
-            if (!d.getRequirementsUnwoundToInstead().contains(req)) {
-                d.getRequirementsUnwoundToInstead().add(req);
-            }
+            @Nullable final R req = lastDetailForCurrentUnwind.getStateRequirement();
+            d.getRequirementsUnwoundToInstead().add(req);
         }
 
-        return currentDetailHolder.currentDetail;
+        return lastDetailForCurrentUnwind;
     }
 
     /**
@@ -595,7 +583,7 @@ public class Resolution<R, S> {
             partialTree.add(r);
             trees.add(partialTree);
             unwindDetails.add(new UnwindDetails<>(-1, null, partialTree, bindingRequirements, trees,
-                                                  new ArrayList<>()));
+                                                  new HashSet<>()));
 
             // If this requirement has alternative possibilities, check if any would satisfy the other requirements
             // that created this conflict
@@ -603,7 +591,7 @@ public class Resolution<R, S> {
 
             if (conflictFixingPossibilities(requirementState, bindingRequirements)) {
                 unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), r, partialTree,
-                                                      bindingRequirements, trees, new ArrayList<>()));
+                                                      bindingRequirements, trees, new HashSet<>()));
             }
 
             // Next, look at the parent of this requirement, and check if the requirement could have been avoided
@@ -614,8 +602,9 @@ public class Resolution<R, S> {
                 requirementState = findStateFor(parentR);
                 assert requirementState != null;
                 if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(r))) {
-                    unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), parentR,
-                                                          partialTree, bindingRequirements, trees, new ArrayList<>()));
+                        unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), parentR,
+                                                              partialTree, bindingRequirements, trees,
+                                                              new HashSet<>()));
                 }
 
                 // Finally, look at the grandparent and up of this requirement, looking for any possibilities that
@@ -627,9 +616,9 @@ public class Resolution<R, S> {
                     assert requirementState != null;
                     final R pR = parentR;
                     if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(pR))) {
-                        unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState),
-                                                              grandparentR, partialTree, bindingRequirements, trees,
-                                                              new ArrayList<>()));
+                            unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState),
+                                                                  grandparentR, partialTree, bindingRequirements, trees,
+                                                                  new HashSet<>()));
                     }
 
                     parentR = grandparentR;

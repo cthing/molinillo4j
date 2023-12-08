@@ -1,6 +1,7 @@
 package org.cthing.molinillo;
 
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ public class UnwindDetailsTest {
         final List<String> requirementTree = List.of("req3");
         final List<String> conflictingRequirements = List.of("req4");
         final List<List<String>> requirementTrees = List.of(List.of("req5", "req6"), List.of("req7"));
-        final List<String> requirementsUnwoundToInstead = List.of("req8");
+        final Set<String> requirementsUnwoundToInstead = Set.of("req8");
         final UnwindDetails<String, String> details = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                           requirementTree, conflictingRequirements,
                                                                           requirementTrees,
@@ -45,7 +46,7 @@ public class UnwindDetailsTest {
             final List<String> requirementTree = List.of("req3");
             final List<String> conflictingRequirements = List.of();
             final List<List<String>> requirementTrees = List.of();
-            final List<String> requirementsUnwoundToInstead = List.of();
+            final Set<String> requirementsUnwoundToInstead = Set.of();
 
             final UnwindDetails<String, String> details1 = new UnwindDetails<>(stateIndex, null,
                                                                               requirementTree, conflictingRequirements,
@@ -61,7 +62,7 @@ public class UnwindDetailsTest {
             final List<String> requirementTree = List.of("req3", "req2", "req18", "req17");
             final List<String> conflictingRequirements = List.of();
             final List<List<String>> requirementTrees = List.of();
-            final List<String> requirementsUnwoundToInstead = List.of();
+            final Set<String> requirementsUnwoundToInstead = Set.of();
 
             final UnwindDetails<String, String> details1 = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                               requirementTree, conflictingRequirements,
@@ -77,7 +78,7 @@ public class UnwindDetailsTest {
             final List<String> requirementTree = List.of("req3", "req18", "req17");
             final List<String> conflictingRequirements = List.of();
             final List<List<String>> requirementTrees = List.of();
-            final List<String> requirementsUnwoundToInstead = List.of();
+            final Set<String> requirementsUnwoundToInstead = Set.of();
 
             final UnwindDetails<String, String> details1 = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                               requirementTree, conflictingRequirements,
@@ -97,7 +98,7 @@ public class UnwindDetailsTest {
             final List<String> requirementTree = List.of("req3", "req18", "req17", "req2");
             final List<String> conflictingRequirements = List.of();
             final List<List<String>> requirementTrees = List.of();
-            final List<String> requirementsUnwoundToInstead = List.of();
+            final Set<String> requirementsUnwoundToInstead = Set.of();
 
             final UnwindDetails<String, String> details = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                               requirementTree, conflictingRequirements,
@@ -113,7 +114,7 @@ public class UnwindDetailsTest {
             final List<String> requirementTree = List.of("req3", "req18", "req17");
             final List<String> conflictingRequirements = List.of();
             final List<List<String>> requirementTrees = List.of();
-            final List<String> requirementsUnwoundToInstead = List.of();
+            final Set<String> requirementsUnwoundToInstead = Set.of();
 
             final UnwindDetails<String, String> details = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                               requirementTree, conflictingRequirements,
@@ -133,7 +134,7 @@ public class UnwindDetailsTest {
                                                             List.of("req7", "req2"),
                                                             List.of("req19", "req2", "req20"),
                                                             List.of("req12", "req2", "req16"));
-        final List<String> requirementsUnwoundToInstead = List.of();
+        final Set<String> requirementsUnwoundToInstead = Set.of();
 
         final UnwindDetails<String, String> details = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                           requirementTree, conflictingRequirements,
@@ -152,38 +153,36 @@ public class UnwindDetailsTest {
                                                             List.of("req7", "req2"),
                                                             List.of("req19", "req2", "req20"),
                                                             List.of("req12", "req2", "req16"));
-        final List<String> requirementsUnwoundToInstead = List.of();
+        final Set<String> requirementsUnwoundToInstead = Set.of();
 
         final UnwindDetails<String, String> details = new UnwindDetails<>(stateIndex, stateRequirement,
                                                                           requirementTree, conflictingRequirements,
                                                                           requirementTrees,
                                                                           requirementsUnwoundToInstead);
-        assertThat(details.allRequirements()).containsExactly("req5", "req6",
-                                                              "req7", "req2",
-                                                              "req19", "req2", "req20",
-                                                              "req12", "req2", "req16");
+        assertThat(details.allRequirements()).containsExactlyInAnyOrder("req5", "req6", "req7", "req2",
+                                                                        "req19", "req20", "req12", "req16");
 
     }
 
     @Test
     public void testOrdering() {
         final UnwindDetails<String, String> details1 = new UnwindDetails<>(3, null, List.of(), List.of(), List.of(),
-                                                                           List.of());
+                                                                           Set.of());
         final UnwindDetails<String, String> details2 = new UnwindDetails<>(1, null, List.of(), List.of(), List.of(),
-                                                                           List.of());
+                                                                           Set.of());
         assertThat(details1.compareTo(details2)).isEqualTo(1);
         assertThat(details2.compareTo(details1)).isEqualTo(-1);
 
         final String stateRequirement3 = "req2";
         final List<String> requirementTree3 = List.of("req3", "req2", "req18", "req17");
         final UnwindDetails<String, String> details3 = new UnwindDetails<>(3, stateRequirement3, requirementTree3,
-                                                                           List.of(), List.of(), List.of());
+                                                                           List.of(), List.of(), Set.of());
         final String stateRequirement4 = "req2";
         final List<String> requirementTree4 = List.of("req3", "req2", "req18");
         final UnwindDetails<String, String> details4 = new UnwindDetails<>(3, stateRequirement4, requirementTree4,
-                                                                           List.of(), List.of(), List.of());
+                                                                           List.of(), List.of(), Set.of());
         final UnwindDetails<String, String> details5 = new UnwindDetails<>(3, stateRequirement4, requirementTree4,
-                                                                           List.of(), List.of(), List.of());
+                                                                           List.of(), List.of(), Set.of());
         assertThat(details3.compareTo(details4)).isGreaterThan(0);
         assertThat(details4.compareTo(details3)).isLessThan(0);
         assertThat(details4.compareTo(details5)).isZero();

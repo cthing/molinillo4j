@@ -168,7 +168,7 @@ public class VersionConflictError extends ResolverError {
         /**
          * Sets a function for generating the entire version conflict message.
          *
-         * @param fullMessageForConflict Function for generating the entire version conflict messsage
+         * @param fullMessageForConflict Function for generating the entire version conflict message
          * @return This option instance.
          */
         public Options<R, S> setFullMessageForConflict(

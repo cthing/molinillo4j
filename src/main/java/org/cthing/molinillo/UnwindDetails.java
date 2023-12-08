@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -28,7 +29,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
 
     private final List<List<R>> requirementTrees;
 
-    private final List<R> requirementsUnwoundToInstead;
+    private final Set<R> requirementsUnwoundToInstead;
 
     private int reversedTreeIndex = -100;
 
@@ -36,7 +37,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
     private List<R> requirementsToAvoid;
 
     @Nullable
-    private List<R> allRequirements;
+    private Set<R> allRequirements;
 
     /**
      * Constructs the details of the unwind state.
@@ -50,7 +51,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      */
     public UnwindDetails(final int stateIndex, @Nullable final R stateRequirement, final List<R> requirementTree,
                          final List<R> conflictingRequirements, final List<List<R>> requirementTrees,
-                         final List<R> requirementsUnwoundToInstead) {
+                         final Set<R> requirementsUnwoundToInstead) {
         this.stateIndex = stateIndex;
         this.stateRequirement = stateRequirement;
         this.requirementTree = requirementTree;
@@ -110,7 +111,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return Unwind requirements that were chosen over this unwind.
      */
-    public List<R> getRequirementsUnwoundToInstead() {
+    public Set<R> getRequirementsUnwoundToInstead() {
         return this.requirementsUnwoundToInstead;
     }
 
@@ -169,11 +170,11 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return All requirements that led to the need for this unwind.
      */
-    public List<R> allRequirements() {
+    public Set<R> allRequirements() {
         if (this.allRequirements == null) {
             this.allRequirements = this.requirementTrees.stream()
                                                         .flatMap(List::stream) // Flatten the list of lists
-                                                        .collect(Collectors.toList());
+                                                        .collect(Collectors.toSet());
         }
         return this.allRequirements;
     }
