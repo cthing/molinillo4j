@@ -117,8 +117,10 @@ public class Resolution<R, S> {
         startResolution();
 
         try {
-            ResolutionState<R, S> state = getState();
-            while (state != null) {
+            Optional<ResolutionState<R, S>> stateOpt = getState();
+            while (stateOpt.isPresent()) {
+                final ResolutionState<R, S> state = stateOpt.get();
+
                 if (state.getRequirement() == null && state.getRequirements().isEmpty()) {
                     break;
                 }
@@ -126,14 +128,14 @@ public class Resolution<R, S> {
                 indicateProgress();
 
                 if (state instanceof final DependencyState<R, S> dependencyState) {
-                    debug(getDepth(), "Creating possibility state for %s (%d remaining)", getRequirement(),
+                    debug(getDepth(), "Creating possibility state for %s (%d remaining)", getRequirement().orElse(null),
                           getPossibilities().size());
                     final PossibilityState<R, S> possibilityState = dependencyState.popPossibilityState();
                     this.states.add(possibilityState);
                 }
 
                 processTopmostState();
-                state = getState();
+                stateOpt = getState();
             }
 
             return resolveActivatedSpecs();
@@ -146,65 +148,56 @@ public class Resolution<R, S> {
      * See {@link ResolutionState#getName()}.
      */
     private String getName() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getName();
+        return getState().orElseGet(ResolutionState::new).getName();
     }
 
     /**
      * See {@link ResolutionState#getRequirements()}.
      */
     private List<R> getRequirements() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getRequirements();
+        return getState().orElseGet(ResolutionState::new).getRequirements();
     }
 
     /**
      * See {@link ResolutionState#getActivated()}.
      */
     private DependencyGraph<Payload<R, S>, R> getActivated() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getActivated();
+        return getState().orElseGet(ResolutionState::new).getActivated();
     }
 
     /**
      * See {@link ResolutionState#getRequirement()}.
      */
-    @Nullable
-    private R getRequirement() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getRequirement();
+    private Optional<R> getRequirement() {
+        return getState().map(ResolutionState::getRequirement);
     }
 
     /**
      * See {@link ResolutionState#getPossibilities()}.
      */
     private List<PossibilitySet<R, S>> getPossibilities() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getPossibilities();
+        return getState().orElseGet(ResolutionState::new).getPossibilities();
     }
 
     /**
      * See {@link ResolutionState#getDepth()}.
      */
     private int getDepth() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getDepth();
+        return getState().orElseGet(ResolutionState::new).getDepth();
     }
 
     /**
      * See {@link ResolutionState#getConflicts()}.
      */
     private Map<String, Conflict<R, S>> getConflicts() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getConflicts();
+        return getState().orElseGet(ResolutionState::new).getConflicts();
     }
 
     /**
      * See {@link ResolutionState#getUnusedUnwindOptions()}.
      */
     private List<UnwindDetails<R, S>> getUnusedUnwindOptions() {
-        final ResolutionState<R, S> currentState = getState();
-        return ((currentState == null) ? new ResolutionState<R, S>() : currentState).getUnusedUnwindOptions();
+        return getState().orElseGet(ResolutionState::new).getUnusedUnwindOptions();
     }
 
     /**
@@ -316,7 +309,7 @@ public class Resolution<R, S> {
      * @return Original error with dependents added
      */
     private NoSuchDependencyError processNoSuchDependencyError(final NoSuchDependencyError error) {
-        if (getState() != null) {
+        if (getState().isPresent()) {
             getActivated().vertexNamed(nameForDependency(error.getDependency())).ifPresent(vertex -> {
                 error.getRequiredBy().addAll(vertex.getIncomingEdges()
                                                    .stream()
@@ -357,8 +350,7 @@ public class Resolution<R, S> {
         debug(0, "                    (Took %d ms)", endedAt - this.startedAt);
         debug(0, "                    (%s)", new SimpleDateFormat(DATE_FORMAT).format(new Date(endedAt)));
 
-        final ResolutionState<R, S> state = getState();
-        if (state != null) {
+        if (getState().isPresent()) {
             debug(0, "Unactivated: %s", getActivated().getVertices()
                                                       .values()
                                                       .stream()
@@ -427,9 +419,8 @@ public class Resolution<R, S> {
      *
      * @return Current resolution state.
      */
-    @Nullable
-    private ResolutionState<R, S> getState() {
-        return this.states.isEmpty() ? null : this.states.get(this.states.size() - 1);
+    private Optional<ResolutionState<R, S>> getState() {
+        return this.states.isEmpty() ? Optional.empty() : Optional.ofNullable(this.states.get(this.states.size() - 1));
     }
 
     /**
@@ -453,7 +444,8 @@ public class Resolution<R, S> {
     private void unwindForConflict() {
         final UnwindDetails<R, S> detailsForUnwind = buildDetailsForUnwind();
         final List<UnwindDetails<R, S>> unwindOptions = new ArrayList<>(getUnusedUnwindOptions());
-        debug(getDepth(), "Unwinding for conflict: %s to %d", getRequirement(), detailsForUnwind.getStateIndex() / 2);
+        debug(getDepth(), "Unwinding for conflict: %s to %d", getRequirement().orElse(null),
+              detailsForUnwind.getStateIndex() / 2);
 
         final Map<String, Conflict<R, S>> conflicts = getConflicts();
         final List<ResolutionState<R, S>> statesToSlice = this.states.subList(detailsForUnwind.getStateIndex() + 1,
@@ -470,8 +462,7 @@ public class Resolution<R, S> {
             }
         }
 
-        final ResolutionState<R, S> state = getState();
-        assert state != null;
+        final ResolutionState<R, S> state = getState().orElseThrow();
         state.setConflicts(conflicts);
         state.setUnusedUnwindOptions(unwindOptions);
 
@@ -490,7 +481,7 @@ public class Resolution<R, S> {
      * @param conflicts Conflicts for the error
      */
     private void raiseErrorUnlessState(final Map<String, Conflict<R, S>> conflicts) {
-        if (getState() != null) {
+        if (getState().isPresent()) {
             return;
         }
 
@@ -539,8 +530,7 @@ public class Resolution<R, S> {
 
         // Add the current unwind options to the collection of unused unwind options. The "used" option will be
         // filtered out during "unwindForConflict".
-        final ResolutionState<R, S> state = getState();
-        assert state != null;
+        final ResolutionState<R, S> state = getState().orElseThrow();
         for (final UnwindDetails<R, S> detail : unwindDetails) {
             if (detail.getStateIndex() != -1) {
                 state.getUnusedUnwindOptions().add(detail);
@@ -583,7 +573,7 @@ public class Resolution<R, S> {
 
             // If this requirement has alternative possibilities, check if any would satisfy the other requirements
             // that created this conflict
-            ResolutionState<R, S> requirementState = findStateFor(r);
+            ResolutionState<R, S> requirementState = findStateFor(r).orElse(null);
 
             if (conflictFixingPossibilities(requirementState, bindingRequirements)) {
                 unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), r, partialTree,
@@ -595,8 +585,7 @@ public class Resolution<R, S> {
             @Nullable R parentR = parentOf(r);
             if (parentR != null) {
                 partialTree.add(0, parentR);
-                requirementState = findStateFor(parentR);
-                assert requirementState != null;
+                requirementState = findStateFor(parentR).orElseThrow();
                 if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(r))) {
                         unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState), parentR,
                                                               partialTree, bindingRequirements, trees,
@@ -608,8 +597,7 @@ public class Resolution<R, S> {
                 @Nullable R grandparentR = parentOf(parentR);
                 while (grandparentR != null) {
                     partialTree.add(0, grandparentR);
-                    requirementState = findStateFor(grandparentR);
-                    assert requirementState != null;
+                    requirementState = findStateFor(grandparentR).orElseThrow();
                     final R pR = parentR;
                     if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(pR))) {
                             unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState),
@@ -653,7 +641,8 @@ public class Resolution<R, S> {
      * @param unwindDetails Details of the conflict just unwound from
      */
     private void filterPossibilitiesAfterUnwind(final UnwindDetails<R, S> unwindDetails) {
-        if (getState() == null || getState().getPossibilities().isEmpty()) {
+        final Optional<ResolutionState<R, S>> stateOpt = getState();
+        if (stateOpt.isEmpty() || stateOpt.get().getPossibilities().isEmpty()) {
             return;
         }
 
@@ -681,8 +670,7 @@ public class Resolution<R, S> {
                                                                   .map(UnwindDetails::getConflictingRequirements)
                                                                   .toList();
 
-        final ResolutionState<R, S> state = getState();
-        assert state != null;
+        final ResolutionState<R, S> state = getState().orElseThrow();
         state.getPossibilities()
              .removeIf(possibilitySet -> possibilitySet
                      .getPossibilities()
@@ -734,8 +722,7 @@ public class Resolution<R, S> {
                                                          .flatMap(uw -> uw.subDependenciesToAvoid().stream())
                                                          .toList();
 
-        final ResolutionState<R, S> state = getState();
-        assert state != null;
+        final ResolutionState<R, S> state = getState().orElseThrow();
         state.getPossibilities()
              .removeIf(possibilitySet -> !allowedPossibilitySets.contains(possibilitySet)
                      && new HashSet<>(possibilitySet.getDependencies()).equals(new HashSet<>(requirementsToAvoid)));
@@ -803,10 +790,7 @@ public class Resolution<R, S> {
             final List<R> result = new ArrayList<>();
             result.add(conflict.getRequirement());
 
-            @Nullable final R req = requirementForExistingName(nameForDependency(conflict.getRequirement()));
-            if (req != null) {
-                result.add(req);
-            }
+            requirementForExistingName(nameForDependency(conflict.getRequirement())).ifPresent(result::add);
 
             return result;
         }
@@ -879,21 +863,18 @@ public class Resolution<R, S> {
      * Finds the requirement that led to a version of a possibility with the given name being activated.
      *
      * @param name Name of the possibility
-     * @return Requirement that led to a version of the named possibility being activated. Returns {@code null}
-     *      if the requirement could not be found.
+     * @return Requirement that led to a version of the named possibility being activated.
      */
-    @Nullable
-    private R requirementForExistingName(final String name) {
+    private Optional<R> requirementForExistingName(final String name) {
         final Optional<Vertex<Payload<R, S>, R>> vertexOpt = getActivated().vertexNamed(name);
         if (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) {
-            return null;
+            return Optional.empty();
         }
 
         return this.states.stream()
                           .filter(state -> state.getName().equals(name))
                           .findFirst()
-                          .map(ResolutionState::getRequirement)
-                          .orElse(null);
+                          .map(ResolutionState::getRequirement);
 
     }
 
@@ -901,19 +882,17 @@ public class Resolution<R, S> {
      * Finds the state whose requirement is the specified requirement.
      *
      * @param requirement Requirement for the state that is to be found
-     * @return State with the specified requirement or {@code null} if either the specified requirement is
+     * @return State with the specified requirement or an empty optional if either the specified requirement is
      *      {@code null} or a state with the specified requirement could not be found.
      */
-    @Nullable
-    private ResolutionState<R, S> findStateFor(@Nullable final R requirement) {
+    private Optional<ResolutionState<R, S>> findStateFor(@Nullable final R requirement) {
         if (requirement == null) {
-            return null;
+            return Optional.empty();
         }
 
         return this.states.stream()
                           .filter(state -> requirement.equals(state.getRequirement()))
-                          .findFirst()
-                          .orElse(null);
+                          .findFirst();
     }
 
     /**
@@ -926,17 +905,19 @@ public class Resolution<R, S> {
     @SuppressWarnings({ "Convert2streamapi", "UnusedReturnValue" })
     private Conflict<R, S> createConflict(@Nullable final RuntimeException underlyingError) {
         final Vertex<Payload<R, S>, R> vertex = getActivated().vertexNamed(getName()).orElseThrow();
-        @Nullable final R lockedRequirement = lockedRequirementNamed(getName());
 
         final Map<Object, Set<R>> requirements = new HashMap<>();
         if (!vertex.getExplicitRequirements().isEmpty()) {
             requirements.put(nameForExplicitDependencySource(), vertex.getExplicitRequirements());
         }
-        if (lockedRequirement != null) {
+
+        final Optional<R> lockedRequirementOpt = lockedRequirementNamed(getName());
+        lockedRequirementOpt.ifPresent(lockedRequirement -> {
             final Set<R> lockedRequirements = new LinkedHashSet<>();
             lockedRequirements.add(lockedRequirement);
             requirements.put(nameForLockingDependencySource(), lockedRequirements);
-        }
+        });
+
         for (final Edge<Payload<R, S>, R> edge : vertex.getIncomingEdges()) {
             final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().orElseThrow().getPossibilitySet();
             @Nullable final S latestVersion = possibilitySet.getLatestVersion();
@@ -957,8 +938,7 @@ public class Resolution<R, S> {
             }
         }
 
-        @Nullable final R requirement = getRequirement();
-        assert requirement != null;
+        final R requirement = getRequirement().orElseThrow();
         @Nullable final S existingSpecification = vertex.getPayload()
                                                         .map(payload -> payload.getPossibilitySet().getLatestVersion())
                                                         .orElse(null);
@@ -969,7 +949,7 @@ public class Resolution<R, S> {
                                                        requirements,
                                                        existingSpecification,
                                                        possibilitySet,
-                                                       lockedRequirement,
+                                                       lockedRequirementOpt.orElse(null),
                                                        requirementTrees(),
                                                        activatedByName,
                                                        underlyingError);
@@ -1050,8 +1030,7 @@ public class Resolution<R, S> {
             attemptToFilterExistingSpec(existingVertex);
         } else {
             @Nullable final S latest = getPossibility().getLatestVersion();
-            @Nullable final R requirement = getRequirement();
-            assert requirement != null;
+            final R requirement = getRequirement().orElseThrow();
             getPossibility().getPossibilities().removeIf(possibility -> !requirementSatisfiedBy(requirement,
                                                                                                 getActivated(),
                                                                                                 possibility));
@@ -1108,12 +1087,10 @@ public class Resolution<R, S> {
      * Obtains the locked requirement with the specified name.
      *
      * @param requirementName Name of the requirement to find in the locked dependency graph
-     * @return Locked requirement with the specified name, or {@code null} if a requirement with the specified
-     *      name could not be found.
+     * @return Locked requirement with the specified name.
      */
-    @Nullable
-    private R lockedRequirementNamed(final String requirementName) {
-        return this.base.vertexNamed(requirementName).flatMap(Vertex::getPayload).orElse(null);
+    private Optional<R> lockedRequirementNamed(final String requirementName) {
+        return this.base.vertexNamed(requirementName).flatMap(Vertex::getPayload);
     }
 
     /**
@@ -1230,7 +1207,7 @@ public class Resolution<R, S> {
             return new ArrayList<>();
         }
 
-        if (lockedRequirementNamed(nameForDependency(requirement)) != null) {
+        if (lockedRequirementNamed(nameForDependency(requirement)).isPresent()) {
             return lockedRequirementPossibilitySet(requirement, activated);
         }
 
@@ -1247,8 +1224,7 @@ public class Resolution<R, S> {
     private List<PossibilitySet<R, S>> lockedRequirementPossibilitySet(final R requirement,
                                                                        final DependencyGraph<Payload<R, S>, R> activated) {
         final List<S> allPossibilities = searchFor(requirement);
-        @Nullable final R lockedRequirement = lockedRequirementNamed(nameForDependency(requirement));
-        assert lockedRequirement != null;
+        final R lockedRequirement = lockedRequirementNamed(nameForDependency(requirement)).orElseThrow();
 
         // Long-winded way to build a possibilities array with either the locked requirement or nothing in it.
         // Required, because the API for locked_requirement is not guaranteed.
