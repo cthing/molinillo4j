@@ -686,7 +686,6 @@ public class Resolution<R, S> {
      *
      * @param unwindDetails Details of the conflict just unwound from
      */
-    @SuppressWarnings("CodeBlock2Expr")
     private void filterPossibilitiesForPrimaryUnwind(final UnwindDetails<R, S> unwindDetails) {
         final List<UnwindDetails<R, S>> unwindsToState =
                 getUnusedUnwindOptions().stream()
@@ -700,13 +699,13 @@ public class Resolution<R, S> {
 
         final ResolutionState<R, S> state = getState();
         assert state != null;
-        state.getPossibilities().removeIf(possibilitySet -> {
-            return possibilitySet.getPossibilities().stream().noneMatch(poss -> {
-                return unwindRequirementSets.stream().anyMatch(requirements -> {
-                    return possibilitySatisfiesRequirements(poss, requirements);
-                });
-            });
-        });
+        state.getPossibilities()
+             .removeIf(possibilitySet -> possibilitySet
+                     .getPossibilities()
+                     .stream()
+                     .noneMatch(poss -> unwindRequirementSets
+                             .stream()
+                             .anyMatch(requirements -> possibilitySatisfiesRequirements(poss, requirements))));
     }
 
     /**
