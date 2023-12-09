@@ -920,7 +920,7 @@ public class Resolution<R, S> {
 
         for (final Edge<Payload<R, S>, R> edge : vertex.getIncomingEdges()) {
             final PossibilitySet<R, S> possibilitySet = edge.getOrigin().getPayload().orElseThrow().getPossibilitySet();
-            @Nullable final S latestVersion = possibilitySet.getLatestVersion();
+            final S latestVersion = possibilitySet.getLatestVersion().orElseThrow();
 
             final Set<R> reqs = requirements.get(latestVersion);
             final Set<R> newReqs = new LinkedHashSet<>();
@@ -934,20 +934,19 @@ public class Resolution<R, S> {
         final Map<String, S> activatedByName = new HashMap<>();
         for (final Vertex<Payload<R, S>, R> v : getActivated().getVertices().values()) {
             if (v.getPayload().isPresent()) {
-                activatedByName.put(v.getName(), v.getPayload().get().getPossibilitySet().getLatestVersion());
+                activatedByName.put(v.getName(), v.getPayload().get().getPossibilitySet().getLatestVersion().orElse(null));
             }
         }
 
         final R requirement = getRequirement().orElseThrow();
-        @Nullable final S existingSpecification = vertex.getPayload()
-                                                        .map(payload -> payload.getPossibilitySet().getLatestVersion())
-                                                        .orElse(null);
+        final Optional<S> existingSpecification = vertex.getPayload()
+                                                        .flatMap(payload -> payload.getPossibilitySet().getLatestVersion());
         @Nullable final PossibilitySet<R, S> possibilitySet = getPossibilities().isEmpty()
                                                               ? null
                                                               : getPossibilities().get(getPossibilities().size() - 1);
         final Conflict<R, S> conflict = new Conflict<>(requirement,
                                                        requirements,
-                                                       existingSpecification,
+                                                       existingSpecification.orElse(null),
                                                        possibilitySet,
                                                        lockedRequirementOpt.orElse(null),
                                                        requirementTrees(),
@@ -1029,17 +1028,15 @@ public class Resolution<R, S> {
             debug(getDepth(), "Found existing spec (%s)", existingVertex.getPayload().get());
             attemptToFilterExistingSpec(existingVertex);
         } else {
-            @Nullable final S latest = getPossibility().getLatestVersion();
+            final Optional<S> latest = getPossibility().getLatestVersion();
             final R requirement = getRequirement().orElseThrow();
             getPossibility().getPossibilities().removeIf(possibility -> !requirementSatisfiedBy(requirement,
                                                                                                 getActivated(),
                                                                                                 possibility));
 
-            if (getPossibility().getLatestVersion() == null) {
+            if (getPossibility().getLatestVersion().isEmpty()) {
                 // Ensure there's a possibility for better error messages
-                if (latest != null) {
-                    getPossibility().getPossibilities().add(latest);
-                }
+                latest.ifPresent(latestVer -> getPossibility().getPossibilities().add(latestVer));
                 createConflict(null);
                 unwindForConflict();
             } else {
@@ -1109,8 +1106,6 @@ public class Resolution<R, S> {
      * @param possibilitySet Possibility set that has just been activated
      */
     private void requireNestedDependenciesFor(final PossibilitySet<R, S> possibilitySet) {
-        @Nullable final S latestVersion = possibilitySet.getLatestVersion();
-        assert latestVersion != null;
         final Set<R> nestedDependencies = possibilitySet.getDependencies();
         debug(getDepth(), "Requiring nested dependencies (%s)", nestedDependencies.stream()
                                                                                   .map(Object::toString)
@@ -1118,7 +1113,8 @@ public class Resolution<R, S> {
 
         for (final R d : nestedDependencies) {
             getActivated().addChildVertex(nameForDependency(d), null,
-                                          List.of(nameForSpecification(possibilitySet.getLatestVersion())), d);
+                                          List.of(nameForSpecification(possibilitySet.getLatestVersion().orElseThrow())),
+                                          d);
             final int parentIndex = this.states.size() - 1;
             final List<Integer> parents = this.parentsOf.computeIfAbsent(d, key -> new ArrayList<>());
             if (parents.isEmpty()) {

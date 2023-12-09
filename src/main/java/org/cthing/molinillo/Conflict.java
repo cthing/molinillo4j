@@ -106,7 +106,7 @@ public final class Conflict<R, S> {
      */
     @Nullable
     public S getPossibility() {
-        return this.possibilitySet == null ? null : this.possibilitySet.getLatestVersion();
+        return this.possibilitySet == null ? null : this.possibilitySet.getLatestVersion().orElse(null);
     }
 
     @Override

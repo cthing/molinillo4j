@@ -20,7 +20,7 @@ public class PossibilitySetTest {
 
         assertThat(possibilitySet.getDependencies()).isEqualTo(dependencies);
         assertThat(possibilitySet.getPossibilities()).isEqualTo(possibilites);
-        assertThat(possibilitySet.getLatestVersion()).isEqualTo("pos2");
+        assertThat(possibilitySet.getLatestVersion()).contains("pos2");
         assertThat(possibilitySet).hasToString("PossibilitySet { possibilities=pos1, pos2 }");
     }
 
@@ -29,7 +29,7 @@ public class PossibilitySetTest {
         final PossibilitySet<String, String> possibilitySet = new PossibilitySet<>(Set.of(), List.of());
         assertThat(possibilitySet.getDependencies()).isEmpty();
         assertThat(possibilitySet.getPossibilities()).isEmpty();
-        assertThat(possibilitySet.getLatestVersion()).isNull();
+        assertThat(possibilitySet.getLatestVersion()).isEmpty();
         assertThat(possibilitySet).hasToString("PossibilitySet { possibilities= }");
     }
 
