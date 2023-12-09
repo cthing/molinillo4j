@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -127,9 +128,8 @@ public class ResolutionState<R, S> {
      *
      * @return Current requirement
      */
-    @Nullable
-    public R getRequirement() {
-        return this.requirement;
+    public Optional<R> getRequirement() {
+        return Optional.ofNullable(this.requirement);
     }
 
     /**

@@ -35,7 +35,7 @@ public class PossibilityStateTest {
         assertThat(possibilityState.getName()).isEqualTo(name);
         assertThat(possibilityState.getRequirements()).isEqualTo(requirements);
         assertThat(possibilityState.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(possibilityState.getRequirement()).isEqualTo(requirement);
+        assertThat(possibilityState.getRequirement()).contains(requirement);
         assertThat(possibilityState.getPossibilities()).isEqualTo(possilibilites);
         assertThat(possibilityState.getDepth()).isEqualTo(depth);
         assertThat(possibilityState.getConflicts()).isEqualTo(conflicts);

@@ -19,7 +19,7 @@ public class ResolutionStateTest {
         assertThat(this.resolutionState.getName()).isEmpty();
         assertThat(this.resolutionState.getRequirements()).isEmpty();
         assertThat(this.resolutionState.getActivated()).isEqualTo(new DependencyGraph<Payload<String, String>, String>());
-        assertThat(this.resolutionState.getRequirement()).isNull();
+        assertThat(this.resolutionState.getRequirement()).isEmpty();
         assertThat(this.resolutionState.getPossibilities()).isEmpty();
         assertThat(this.resolutionState.getDepth()).isZero();
         assertThat(this.resolutionState.getConflicts()).isEmpty();
@@ -49,7 +49,7 @@ public class ResolutionStateTest {
         assertThat(resolutionState1.getName()).isEqualTo(name);
         assertThat(resolutionState1.getRequirements()).isEqualTo(requirements);
         assertThat(resolutionState1.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(resolutionState1.getRequirement()).isEqualTo(requirement);
+        assertThat(resolutionState1.getRequirement()).contains(requirement);
         assertThat(resolutionState1.getPossibilities()).isEqualTo(possilibilites);
         assertThat(resolutionState1.getDepth()).isEqualTo(depth);
         assertThat(resolutionState1.getConflicts()).isEqualTo(conflicts);
@@ -81,7 +81,7 @@ public class ResolutionStateTest {
     public void testRequirement() {
         final String requirement = "def";
         this.resolutionState.setRequirement(requirement);
-        assertThat(this.resolutionState.getRequirement()).isEqualTo(requirement);
+        assertThat(this.resolutionState.getRequirement()).contains(requirement);
     }
 
     @Test

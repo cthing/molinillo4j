@@ -121,7 +121,7 @@ public class Resolution<R, S> {
             while (stateOpt.isPresent()) {
                 final ResolutionState<R, S> state = stateOpt.get();
 
-                if (state.getRequirement() == null && state.getRequirements().isEmpty()) {
+                if (state.getRequirement().isEmpty() && state.getRequirements().isEmpty()) {
                     break;
                 }
 
@@ -169,7 +169,7 @@ public class Resolution<R, S> {
      * See {@link ResolutionState#getRequirement()}.
      */
     private Optional<R> getRequirement() {
-        return getState().map(ResolutionState::getRequirement);
+        return getState().flatMap(ResolutionState::getRequirement);
     }
 
     /**
@@ -856,7 +856,7 @@ public class Resolution<R, S> {
             return null;
         }
 
-        return parentState.getRequirement();
+        return parentState.getRequirement().orElse(null);
     }
 
     /**
@@ -874,7 +874,7 @@ public class Resolution<R, S> {
         return this.states.stream()
                           .filter(state -> state.getName().equals(name))
                           .findFirst()
-                          .map(ResolutionState::getRequirement);
+                          .flatMap(ResolutionState::getRequirement);
 
     }
 
@@ -891,7 +891,7 @@ public class Resolution<R, S> {
         }
 
         return this.states.stream()
-                          .filter(state -> requirement.equals(state.getRequirement()))
+                          .filter(state -> requirement.equals(state.getRequirement().orElse(null)))
                           .findFirst();
     }
 
@@ -1153,7 +1153,8 @@ public class Resolution<R, S> {
 
         final Function<R, Boolean> isRequirementUnique =
                 requirement -> this.states.stream()
-                                          .noneMatch(state -> Objects.equals(state.getRequirement(), requirement));
+                                          .noneMatch(state -> Objects.equals(state.getRequirement().orElse(null),
+                                                                             requirement));
 
         @Nullable R newRequirement;
         do {
@@ -1180,8 +1181,8 @@ public class Resolution<R, S> {
      * @param state Dependency stat to push if it is not missing
      */
     private void handleMissingOrPushDependencyState(final DependencyState<R, S> state) {
-        if (state.getRequirement() != null && state.getPossibilities().isEmpty()
-                && allowMissing(state.getRequirement())) {
+        if (state.getRequirement().isPresent() && state.getPossibilities().isEmpty()
+                && allowMissing(state.getRequirement().get())) {
             state.getActivated().detachVertexNamed(state.getName());
             pushStateForRequirements(new LinkedHashSet<>(state.getRequirements()), false, state.getActivated());
         } else {

@@ -38,7 +38,7 @@ public class DependencyStateTest {
         assertThat(dependencyState.getName()).isEqualTo(name);
         assertThat(dependencyState.getRequirements()).isEqualTo(requirements);
         assertThat(dependencyState.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(dependencyState.getRequirement()).isEqualTo(requirement);
+        assertThat(dependencyState.getRequirement()).contains(requirement);
         assertThat(dependencyState.getPossibilities()).isEqualTo(possilibilites);
         assertThat(dependencyState.getDepth()).isEqualTo(depth);
         assertThat(dependencyState.getConflicts()).isEqualTo(conflicts);
@@ -71,7 +71,7 @@ public class DependencyStateTest {
         assertThat(possibilityState.getName()).isEqualTo(name);
         assertThat(possibilityState.getRequirements()).isEqualTo(requirements);
         assertThat(possibilityState.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(possibilityState.getRequirement()).isEqualTo(requirement);
+        assertThat(possibilityState.getRequirement()).contains(requirement);
         assertThat(possibilityState.getPossibilities()).isEqualTo(List.of(possibilitySet2));
         assertThat(possibilityState.getDepth()).isEqualTo(depth + 1);
         assertThat(possibilityState.getConflicts()).isEqualTo(conflicts);
@@ -80,7 +80,7 @@ public class DependencyStateTest {
         assertThat(dependencyState.getName()).isEqualTo(name);
         assertThat(dependencyState.getRequirements()).isEqualTo(requirements);
         assertThat(dependencyState.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(dependencyState.getRequirement()).isEqualTo(requirement);
+        assertThat(dependencyState.getRequirement()).contains(requirement);
         assertThat(dependencyState.getPossibilities()).isEqualTo(List.of(possibilitySet1));
         assertThat(dependencyState.getDepth()).isEqualTo(depth);
         assertThat(dependencyState.getConflicts()).isEqualTo(conflicts);
@@ -113,7 +113,7 @@ public class DependencyStateTest {
         assertThat(possibilityState.getName()).isEqualTo(name);
         assertThat(possibilityState.getRequirements()).isEqualTo(requirements);
         assertThat(possibilityState.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(possibilityState.getRequirement()).isEqualTo(requirement);
+        assertThat(possibilityState.getRequirement()).contains(requirement);
         assertThat(possibilityState.getPossibilities()).isEmpty();
         assertThat(possibilityState.getDepth()).isEqualTo(depth + 1);
         assertThat(possibilityState.getConflicts()).isEqualTo(conflicts);
@@ -122,7 +122,7 @@ public class DependencyStateTest {
         assertThat(dependencyState.getName()).isEqualTo(name);
         assertThat(dependencyState.getRequirements()).isEqualTo(requirements);
         assertThat(dependencyState.getActivated()).isEqualTo(dependencyGraph);
-        assertThat(dependencyState.getRequirement()).isEqualTo(requirement);
+        assertThat(dependencyState.getRequirement()).contains(requirement);
         assertThat(dependencyState.getPossibilities()).isEmpty();
         assertThat(dependencyState.getDepth()).isEqualTo(depth);
         assertThat(dependencyState.getConflicts()).isEqualTo(conflicts);

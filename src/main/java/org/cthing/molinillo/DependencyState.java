@@ -52,7 +52,7 @@ public class DependencyState<R, S> extends ResolutionState<R, S> {
         final PossibilityState<R, S> state = new PossibilityState<>(getName(),
                                                                     new ArrayList<>(getRequirements()),
                                                                     getActivated(),
-                                                                    getRequirement(),
+                                                                    getRequirement().orElse(null),
                                                                     possibility,
                                                                     getDepth() + 1,
                                                                     new HashMap<>(getConflicts()),
