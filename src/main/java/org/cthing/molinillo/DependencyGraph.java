@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
@@ -178,6 +179,36 @@ public class DependencyGraph<P, R> {
      */
     public void setPayload(final String name, final P payload) {
         this.log.setPayload(this, name, payload);
+    }
+
+    /**
+     * Clones this dependency graph and allows the payload type to be changed.
+     *
+     * @param <U> Type for the new payload
+     * @param payloadTransform Function to map from the original payload to the new payload
+     * @return Clone of this graph with a new payload type, if desired
+     */
+    public <U> DependencyGraph<U, R> cloneGraph(final Function<P, U> payloadTransform) {
+        final DependencyGraph<U, R> graph = new DependencyGraph<>();
+
+        for (final Vertex<P, R> vertex : this.vertices.values()) {
+            graph.addVertex(vertex.getName(), vertex.getPayload().map(payloadTransform).orElse(null), vertex.isRoot());
+        }
+
+        for (final Vertex<P, R> vertex : this.vertices.values()) {
+            for (final Edge<P, R> edge : vertex.getIncomingEdges()) {
+                final Vertex<U, R> origin = graph.vertexNamed(edge.getOrigin().getName()).orElseThrow();
+                final Vertex<U, R> destination = graph.vertexNamed(edge.getDestination().getName()).orElseThrow();
+                graph.addEdgeNoCircular(origin, destination, edge.getRequirement());
+            }
+            for (final Edge<P, R> edge : vertex.getOutgoingEdges()) {
+                final Vertex<U, R> origin = graph.vertexNamed(edge.getOrigin().getName()).orElseThrow();
+                final Vertex<U, R> destination = graph.vertexNamed(edge.getDestination().getName()).orElseThrow();
+                graph.addEdgeNoCircular(origin, destination, edge.getRequirement());
+            }
+        }
+
+        return graph;
     }
 
     /**

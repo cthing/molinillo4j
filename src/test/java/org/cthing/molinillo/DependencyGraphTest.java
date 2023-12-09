@@ -1,6 +1,7 @@
 package org.cthing.molinillo;
 
 import java.util.List;
+import java.util.Map;
 
 import org.cthing.molinillo.errors.CircularDependencyError;
 import org.cthing.molinillo.graph.Action;
@@ -217,6 +218,22 @@ public class DependencyGraphTest {
 
         this.graph.rewindTo("tag1");
         assertThat(this.graph.isEmpty()).isTrue();
+    }
+
+    @Test
+    public void testCloneGraph() {
+        final Vertex<String, String> vertex1 = this.graph.addVertex("v1", "1", false);
+        final Vertex<String, String> vertex2 = this.graph.addVertex("v2", "2", false);
+        final Vertex<String, String> vertex3 = this.graph.addVertex("v3", "3", false);
+        this.graph.addEdge(vertex1, vertex2, "req");
+        this.graph.addEdge(vertex2, vertex3, "req");
+
+        final DependencyGraph<Integer, String> graph2 = this.graph.cloneGraph(payload -> Integer.parseInt(payload, 10));
+        final Map<String, Vertex<Integer, String>> vertices = graph2.getVertices();
+        assertThat(vertices.keySet()).containsExactlyInAnyOrder("v1", "v2", "v3");
+        assertThat(vertices.get("v1").getPayload()).contains(1);
+        assertThat(vertices.get("v2").getPayload()).contains(2);
+        assertThat(vertices.get("v3").getPayload()).contains(3);
     }
 
     @Test

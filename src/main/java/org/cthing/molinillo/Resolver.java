@@ -34,7 +34,7 @@ public class Resolver<R, S> {
      * @return Graph of the resolved dependencies
      * @throws ResolverError if there is an error trying to resolve the dependencies
      */
-    public DependencyGraph<Payload<R, S>, R> resolve(final Set<R> requested)
+    public DependencyGraph<S, R> resolve(final Set<R> requested)
             throws ResolverError {
         return resolve(requested, new DependencyGraph<>());
     }
@@ -47,7 +47,7 @@ public class Resolver<R, S> {
      * @return Graph of the resolved dependencies
      * @throws ResolverError if there is an error trying to resolve the dependencies
      */
-    public DependencyGraph<Payload<R, S>, R> resolve(final Set<R> requested, final DependencyGraph<R, R> base)
+    public DependencyGraph<S, R> resolve(final Set<R> requested, final DependencyGraph<R, R> base)
             throws ResolverError {
         final Resolution<R, S> resolution = new Resolution<>(this.specificationProvider, this.resolverUI,
                                                              requested, base);

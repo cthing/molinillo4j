@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
 
 import org.cthing.molinillo.ConsoleUI;
 import org.cthing.molinillo.DependencyGraph;
-import org.cthing.molinillo.Payload;
 import org.cthing.molinillo.Resolver;
 import org.cthing.molinillo.graph.Vertex;
 import org.cthing.versionparser.Version;
@@ -99,10 +98,11 @@ public final class TestCase {
         return this.conflicts;
     }
 
-    public DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> getResult() {
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> graph = new DependencyGraph<>();
+    public DependencyGraph<TestSpecification, TestRequirement> getResult() {
+        final DependencyGraph<TestSpecification, TestRequirement> graph = new DependencyGraph<>();
         final JsonNode resolved = this.rootNode.get("resolved");
-        resolved.elements().forEachRemaining(element -> addDependenciesToGraph(graph, null, element, Payload::new));
+        resolved.elements().forEachRemaining(element -> addDependenciesToGraph(graph, null, element,
+                                                                               dependency -> dependency));
         return graph;
     }
 
@@ -113,7 +113,7 @@ public final class TestCase {
         return graph;
     }
 
-    public DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> resolve(final Class<? extends TestIndex> indexClass) {
+    public DependencyGraph<TestSpecification, TestRequirement> resolve(final Class<? extends TestIndex> indexClass) {
         final TestIndex testIndex;
         try {
             testIndex = indexClass.getDeclaredConstructor(Map.class).newInstance(this.index.getSpecs());
@@ -128,15 +128,15 @@ public final class TestCase {
     }
 
     private <R> void addDependenciesToGraph(final DependencyGraph<R, TestRequirement> graph,
-                                        @Nullable final Vertex<R, TestRequirement> parent,
-                                        final JsonNode json, final Function<TestSpecification, R> payloadFunc) {
+                                            @Nullable final Vertex<R, TestRequirement> parent,
+                                            final JsonNode json, final Function<TestSpecification, R> payloadFunc) {
         addDependenciesToGraph(graph, parent, json, payloadFunc, new LinkedHashSet<>());
     }
 
     private <R> void addDependenciesToGraph(final DependencyGraph<R, TestRequirement> graph,
-                                        @Nullable final Vertex<R, TestRequirement> parent,
-                                        final JsonNode json, final Function<TestSpecification, R> payloadFunc,
-                                        final Set<Vertex<R, TestRequirement>> allParents) {
+                                            @Nullable final Vertex<R, TestRequirement> parent,
+                                            final JsonNode json, final Function<TestSpecification, R> payloadFunc,
+                                            final Set<Vertex<R, TestRequirement>> allParents) {
         final String specName = json.get("name").asText();
         final Version specVersion;
         try {

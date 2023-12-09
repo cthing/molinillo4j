@@ -77,7 +77,7 @@ public class Resolution<R, S> {
      * @return Dependency graph of the successfully resolved dependencies.
      * @throws ResolverError if a problem was encountered during the resolution process.
      */
-    public DependencyGraph<Payload<R, S>, R> resolve() throws ResolverError {
+    public DependencyGraph<S, R> resolve() throws ResolverError {
         startResolution();
 
         try {
@@ -366,7 +366,7 @@ public class Resolution<R, S> {
         }
     }
 
-    private DependencyGraph<Payload<R, S>, R> resolveActivatedSpecs() {
+    private DependencyGraph<S, R> resolveActivatedSpecs() {
         for (final Vertex<Payload<R, S>, R> vertex : getActivated().getVertices().values()) {
             vertex.getPayload().ifPresent(payload -> {
                 final List<S> possibilities = payload.getPossibilitySet().getPossibilities();
@@ -382,7 +382,7 @@ public class Resolution<R, S> {
             });
         }
 
-        return getActivated();
+        return getActivated().cloneGraph(Payload::getSpecification);
     }
 
     /**

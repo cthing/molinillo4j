@@ -69,7 +69,8 @@ public class ResolverTest {
                         DynamicTest.dynamicTest(testName, () -> {
                             final Set<String> conflicts = testCase.getConflicts();
                             if (conflicts.isEmpty()) {
-                                final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> result = testCase.resolve(indexClass);
+                                final DependencyGraph<TestSpecification, TestRequirement> result =
+                                        testCase.resolve(indexClass);
                                 assertThat(result).isEqualTo(testCase.getResult());
                             } else {
                                 final Throwable throwable = catchThrowableOfType(() -> testCase.resolve(indexClass), ResolverError.class);
@@ -167,14 +168,11 @@ public class ResolverTest {
         final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(spyIndex, new ConsoleUI());
 
         spyIndex.setAllowMissing(dep2);
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
-                resolver.resolve(Set.of(dep1), graph);
+        final DependencyGraph<TestSpecification, TestRequirement> results = resolver.resolve(Set.of(dep1), graph);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
-                                                         .map(vertex -> vertex.getPayload()
-                                                                              .orElseThrow()
-                                                                              .getSpecification())
+                                                         .map(vertex -> vertex.getPayload().orElseThrow())
                                                          .collect(Collectors.toList());
         assertThat(testSpecs).containsExactly(new TestSpecification("actionpack", "1.2.3",
                                                                     Map.of("activesupport", "1.2.3")));
@@ -236,14 +234,12 @@ public class ResolverTest {
 
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
         final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
-                resolver.resolve(deps, graph);
+        final DependencyGraph<TestSpecification, TestRequirement> results = resolver.resolve(deps, graph);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
                                                          .map(vertex -> vertex.getPayload()
-                                                                              .orElseThrow()
-                                                                              .getSpecification())
+                                                                              .orElseThrow())
                                                          .collect(Collectors.toList());
         assertThat(testSpecs).containsExactly(new TestSpecification("c", "1.0.0", Map.of()),
                                               new TestSpecification("z", "2.0.0", Map.of()));
@@ -269,14 +265,12 @@ public class ResolverTest {
 
         deps.forEach(index::searchFor);
 
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
-                resolver.resolve(deps, graph);
+        final DependencyGraph<TestSpecification, TestRequirement> results = resolver.resolve(deps, graph);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
                                                          .map(vertex -> vertex.getPayload()
-                                                                              .orElseThrow()
-                                                                              .getSpecification())
+                                                                              .orElseThrow())
                                                          .collect(Collectors.toList());
         assertThat(testSpecs).contains(
                 new TestSpecification("pastel", "0.6.1",
@@ -354,14 +348,13 @@ public class ResolverTest {
                         final Resolver<TestRequirement, TestSpecification> resolver =
                                 new Resolver<>(testIndex, new ConsoleUI());
 
-                        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
+                        final DependencyGraph<TestSpecification, TestRequirement> results =
                                 resolver.resolve(deps, graph);
                         final List<TestSpecification> testSpecs = results.getVertices()
                                                                          .values()
                                                                          .stream()
                                                                          .map(vertex -> vertex.getPayload()
-                                                                                              .orElseThrow()
-                                                                                              .getSpecification())
+                                                                                              .orElseThrow())
                                                                          .collect(Collectors.toList());
                         assertThat(testSpecs).satisfiesAnyOf(ts -> assertThat(testSpecs).containsExactlyInAnyOrder(
                                 new TestSpecification("a", "2", Map.of("c", "1", "d", "2")),

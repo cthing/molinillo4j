@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.cthing.molinillo.BundlerReverseTestIndex;
 import org.cthing.molinillo.DependencyGraph;
-import org.cthing.molinillo.Payload;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestDependency;
 import org.cthing.molinillo.fixtures.TestRequirement;
@@ -31,7 +30,7 @@ public class TestCaseTest {
                                                                       requirement4, requirement5);
         assertThat(testCase.getConflicts()).isEmpty();
 
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> resultGraph = testCase.getResult();
+        final DependencyGraph<TestSpecification, TestRequirement> resultGraph = testCase.getResult();
         assertThat(resultGraph.getVertices()).hasSize(46);
         final DependencyGraph<TestRequirement, TestRequirement> baseGraph = testCase.getBase();
         assertThat(baseGraph.getVertices()).hasSize(8);
@@ -46,7 +45,7 @@ public class TestCaseTest {
     @Test
     public void testResolve() {
         final TestCase testCase = TestCase.fromFixture("complex_conflict");
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> result =
+        final DependencyGraph<TestSpecification, TestRequirement> result =
                 testCase.resolve(BundlerReverseTestIndex.class);
         assertThat(result).isEqualTo(testCase.getResult());
     }
