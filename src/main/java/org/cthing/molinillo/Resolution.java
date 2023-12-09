@@ -761,7 +761,7 @@ public class Resolution<R, S> {
      * @return Minimal list of requirements that would cause the specified conflict.
      */
     private List<R> bindingRequirementsForConflict(final Conflict<R, S> conflict) {
-        if (conflict.getPossibility() == null) {
+        if (conflict.getPossibility().isEmpty()) {
             final List<R> result = new ArrayList<>();
             result.add(conflict.getRequirement());
             return result;

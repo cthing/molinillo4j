@@ -3,6 +3,7 @@ package org.cthing.molinillo;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -104,9 +105,8 @@ public final class Conflict<R, S> {
      *
      * @return Specification that could not be activated due to a conflict.
      */
-    @Nullable
-    public S getPossibility() {
-        return this.possibilitySet == null ? null : this.possibilitySet.getLatestVersion().orElse(null);
+    public Optional<S> getPossibility() {
+        return this.possibilitySet == null ? Optional.empty() : this.possibilitySet.getLatestVersion();
     }
 
     @Override

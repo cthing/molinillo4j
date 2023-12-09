@@ -35,7 +35,7 @@ public class ConflictTest {
         assertThat(conflict.getRequirementTrees()).isEqualTo(requirementTrees);
         assertThat(conflict.getActivatedByName()).isEqualTo(activatedByName);
         assertThat(conflict.getUnderlyingError()).isEqualTo(underlyingError);
-        assertThat(conflict.getPossibility()).isEqualTo("pos2");
+        assertThat(conflict.getPossibility()).contains("pos2");
         assertThat(conflict.toString()).contains("Conflict { requirement=req1");
     }
 
