@@ -34,7 +34,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 
-public class ResolutionTest {
+public class ResolverTest {
 
     private static final List<Class<? extends TestIndex>> INDEX_CLASSES = List.of(
             TestIndex.class,
@@ -100,10 +100,9 @@ public class ResolutionTest {
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
         final TestRequirement dep = new TestRequirement(new TestDependency("missing", "3.0"));
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(testIndex, new ConsoleUI(),
-                                                                                         Set.of(dep), graph);
-        final VersionConflictError versionConflictError = catchThrowableOfType(resolver::resolve,
-                                                                               VersionConflictError.class);
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final VersionConflictError versionConflictError =
+                catchThrowableOfType(() -> resolver.resolve(Set.of(dep), graph), VersionConflictError.class);
         assertThat(versionConflictError.getMessage()).isEqualTo("""
                              Unable to satisfy the following requirements:
 
@@ -148,11 +147,10 @@ public class ResolutionTest {
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
         final TestRequirement dep = new TestRequirement(new TestDependency("missing", "3.0"));
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(testIndex, new ConsoleUI(),
-                                                                                         Set.of(dep), graph);
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
 
         testIndex.setAllowMissing(dep);
-        assertThat(resolver.resolve().getVertices()).isEmpty();
+        assertThat(resolver.resolve(Set.of(dep), graph).getVertices()).isEmpty();
     }
 
     @Test
@@ -166,11 +164,11 @@ public class ResolutionTest {
         when(spyIndex.searchFor(dep2)).thenReturn(List.of());
 
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(spyIndex, new ConsoleUI(),
-                                                                                         Set.of(dep1), graph);
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(spyIndex, new ConsoleUI());
 
         spyIndex.setAllowMissing(dep2);
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results = resolver.resolve();
+        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
+                resolver.resolve(Set.of(dep1), graph);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
@@ -237,9 +235,9 @@ public class ResolutionTest {
         final Set<TestRequirement> deps = Set.of(dep1, dep2, dep3);
 
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(index, new ConsoleUI(),
-                                                                                         deps, graph);
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results = resolver.resolve();
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
+                resolver.resolve(deps, graph);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
@@ -267,12 +265,12 @@ public class ResolutionTest {
         });
 
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(index, new ConsoleUI(),
-                                                                                         deps, graph);
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
 
         deps.forEach(index::searchFor);
 
-        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results = resolver.resolve();
+        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
+                resolver.resolve(deps, graph);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
@@ -314,10 +312,9 @@ public class ResolutionTest {
         final Set<TestRequirement> deps = Set.of(new TestRequirement(new TestDependency("a")));
 
         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(testIndex, new ConsoleUI(),
-                                                                                         deps, graph);
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
         assertThatExceptionOfType(CircularDependencyError.class)
-                .isThrownBy(resolver::resolve)
+                .isThrownBy(() -> resolver.resolve(deps, graph))
                 .withMessage("There is a circular dependency between a and b and c and d");
     }
 
@@ -354,10 +351,11 @@ public class ResolutionTest {
                         final Set<TestRequirement> deps = Set.of(dep1, dep2);
 
                         final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-                        final Resolution<TestRequirement, TestSpecification> resolver =
-                                new Resolution<>(testIndex, new ConsoleUI(), deps, graph);
+                        final Resolver<TestRequirement, TestSpecification> resolver =
+                                new Resolver<>(testIndex, new ConsoleUI());
 
-                        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results = resolver.resolve();
+                        final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> results =
+                                resolver.resolve(deps, graph);
                         final List<TestSpecification> testSpecs = results.getVertices()
                                                                          .values()
                                                                          .stream()

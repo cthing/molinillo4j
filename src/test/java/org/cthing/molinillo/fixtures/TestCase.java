@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 import org.cthing.molinillo.ConsoleUI;
 import org.cthing.molinillo.DependencyGraph;
 import org.cthing.molinillo.Payload;
-import org.cthing.molinillo.Resolution;
+import org.cthing.molinillo.Resolver;
 import org.cthing.molinillo.graph.Vertex;
 import org.cthing.versionparser.Version;
 import org.cthing.versionparser.VersionParsingException;
@@ -123,9 +123,8 @@ public final class TestCase {
 
         final ConsoleUI consoleUi = new ConsoleUI();
         //consoleUi.setDebugMode(true);
-        final Resolution<TestRequirement, TestSpecification> resolver = new Resolution<>(testIndex, consoleUi,
-                                                                                         getRequested(), getBase());
-        return resolver.resolve();
+        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, consoleUi);
+        return resolver.resolve(getRequested(), getBase());
     }
 
     private <R> void addDependenciesToGraph(final DependencyGraph<R, TestRequirement> graph,

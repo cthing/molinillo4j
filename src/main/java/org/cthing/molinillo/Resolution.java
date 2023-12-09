@@ -72,42 +72,6 @@ public class Resolution<R, S> {
     }
 
     /**
-     * Obtains the provider for dependencies, requirements, specifications, versions, etc.
-     *
-     * @return Provider for all metadata.
-     */
-    public SpecificationProvider<R, S> getSpecificationProvider() {
-        return this.specificationProvider;
-    }
-
-    /**
-     * Obtains the object that provides feedback to the user on the resolution process.
-     *
-     * @return Provides feedback to users.
-     */
-    public UI getResolverUi() {
-        return this.resolverUi;
-    }
-
-    /**
-     * Obtains the dependencies that are explicitly required.
-     *
-     * @return Direct dependencies.
-     */
-    public Set<R> getOriginalRequested() {
-        return this.originalRequested;
-    }
-
-    /**
-     * Obtains the dependency graph to which dependencies should be locked.
-     *
-     * @return Locking dependency graph.
-     */
-    public DependencyGraph<R, R> getBase() {
-        return this.base;
-    }
-
-    /**
      * Resolves the originally requested dependencies into a full dependency graph.
      *
      * @return Dependency graph of the successfully resolved dependencies.
@@ -142,6 +106,42 @@ public class Resolution<R, S> {
         } finally {
             endResolution();
         }
+    }
+
+    /**
+     * Obtains the provider for dependencies, requirements, specifications, versions, etc.
+     *
+     * @return Provider for all metadata.
+     */
+    public SpecificationProvider<R, S> getSpecificationProvider() {
+        return this.specificationProvider;
+    }
+
+    /**
+     * Obtains the object that provides feedback to the user on the resolution process.
+     *
+     * @return Provides feedback to users.
+     */
+    public UI getResolverUi() {
+        return this.resolverUi;
+    }
+
+    /**
+     * Obtains the dependencies that are explicitly required.
+     *
+     * @return Direct dependencies.
+     */
+    public Set<R> getOriginalRequested() {
+        return this.originalRequested;
+    }
+
+    /**
+     * Obtains the dependency graph to which dependencies should be locked.
+     *
+     * @return Locking dependency graph.
+     */
+    public DependencyGraph<R, R> getBase() {
+        return this.base;
     }
 
     /**
