@@ -21,25 +21,27 @@ public class BerkshelfTestIndex extends TestIndex {
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
-    public List<TestRequirement> sortDependencies(final List<TestRequirement> dependencies,
-                                                  final DependencyGraph<Payload<TestRequirement, TestSpecification>,
-                                                          TestRequirement> activated,
-                                                  final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
-        final Function<TestRequirement, Integer> payloadFunction = dep -> {
-            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
+    public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
+                                                 final DependencyGraph<Payload<TestDependency, TestSpecification>,
+                                                         TestDependency> activated,
+                                                 final Map<String, Conflict<TestDependency, TestSpecification>> conflicts) {
+        final Function<TestDependency, Integer> payloadFunction = dep -> {
+            final Optional<Vertex<Payload<TestDependency, TestSpecification>, TestDependency>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
             return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? 1 : 0;
         };
-        final Function<TestRequirement, Integer> conflictsFunction =
+        final Function<TestDependency, Integer> conflictsFunction =
                 dep -> conflicts.containsKey(nameForDependency(dep)) ? 0 : 1;
-        final Function<TestRequirement, Integer> versionsFunction = dep -> {
-            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
+        final Function<TestDependency, Integer> versionsFunction = dep -> {
+            final Optional<Vertex<Payload<TestDependency, TestSpecification>, TestDependency>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
-            return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? versionsOf(nameForDependency(dep)) : 0;
+            return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty())
+                   ? versionsOf(nameForDependency(dep))
+                   : 0;
         };
-        final Comparator<TestRequirement> requirementComparator = Comparator.comparing(payloadFunction)
-                                                                            .thenComparing(conflictsFunction)
-                                                                            .thenComparing(versionsFunction);
+        final Comparator<TestDependency> requirementComparator = Comparator.comparing(payloadFunction)
+                                                                           .thenComparing(conflictsFunction)
+                                                                           .thenComparing(versionsFunction);
         return dependencies.stream()
                            .sorted(requirementComparator)
                            .collect(Collectors.toList());

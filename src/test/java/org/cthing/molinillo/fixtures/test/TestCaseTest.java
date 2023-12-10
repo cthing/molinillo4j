@@ -6,7 +6,6 @@ import org.cthing.molinillo.BundlerReverseTestIndex;
 import org.cthing.molinillo.DependencyGraph;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestDependency;
-import org.cthing.molinillo.fixtures.TestRequirement;
 import org.cthing.molinillo.fixtures.TestSpecification;
 import org.junit.jupiter.api.Test;
 
@@ -21,18 +20,18 @@ public class TestCaseTest {
         assertThat(testCase.getName()).isEqualTo("resolves a conflict which requires non-trivial unwinding");
         assertThat(testCase.getIndex().getSpecs()).hasSize(127);
 
-        final TestRequirement requirement1 = new TestRequirement(new TestDependency("devise", ""));
-        final TestRequirement requirement2 = new TestRequirement(new TestDependency("sprockets-rails", ""));
-        final TestRequirement requirement3 = new TestRequirement(new TestDependency("rails", ""));
-        final TestRequirement requirement4 = new TestRequirement(new TestDependency("spring", ""));
-        final TestRequirement requirement5 = new TestRequirement(new TestDependency("web-console", ""));
-        assertThat(testCase.getRequested()).containsExactlyInAnyOrder(requirement1, requirement2, requirement3,
-                                                                      requirement4, requirement5);
+        final TestDependency dependency1 = new TestDependency("devise", "");
+        final TestDependency dependency2 = new TestDependency("sprockets-rails", "");
+        final TestDependency dependency3 = new TestDependency("rails", "");
+        final TestDependency dependency4 = new TestDependency("spring", "");
+        final TestDependency dependency5 = new TestDependency("web-console", "");
+        assertThat(testCase.getRequested()).containsExactlyInAnyOrder(dependency1, dependency2, dependency3,
+                                                                      dependency4, dependency5);
         assertThat(testCase.getConflicts()).isEmpty();
 
-        final DependencyGraph<TestSpecification, TestRequirement> resultGraph = testCase.getResult();
+        final DependencyGraph<TestSpecification, TestDependency> resultGraph = testCase.getResult();
         assertThat(resultGraph.getVertices()).hasSize(46);
-        final DependencyGraph<TestRequirement, TestRequirement> baseGraph = testCase.getBase();
+        final DependencyGraph<TestDependency, TestDependency> baseGraph = testCase.getBase();
         assertThat(baseGraph.getVertices()).hasSize(8);
     }
 
@@ -45,7 +44,7 @@ public class TestCaseTest {
     @Test
     public void testResolve() {
         final TestCase testCase = TestCase.fromFixture("complex_conflict");
-        final DependencyGraph<TestSpecification, TestRequirement> result =
+        final DependencyGraph<TestSpecification, TestDependency> result =
                 testCase.resolve(BundlerReverseTestIndex.class);
         assertThat(result).isEqualTo(testCase.getResult());
     }

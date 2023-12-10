@@ -18,11 +18,11 @@ public class RandomTestIndex extends TestIndex {
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
-    public List<TestRequirement> sortDependencies(final List<TestRequirement> dependencies,
-                                                  final DependencyGraph<Payload<TestRequirement, TestSpecification>,
-                                                          TestRequirement> activated,
-                                                  final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
-        final List<TestRequirement> shuffledDependencies = new ArrayList<>(dependencies);
+    public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
+                                                 final DependencyGraph<Payload<TestDependency, TestSpecification>,
+                                                         TestDependency> activated,
+                                                 final Map<String, Conflict<TestDependency, TestSpecification>> conflicts) {
+        final List<TestDependency> shuffledDependencies = new ArrayList<>(dependencies);
         Collections.shuffle(shuffledDependencies);
         return shuffledDependencies;
     }

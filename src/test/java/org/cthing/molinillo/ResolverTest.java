@@ -9,17 +9,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.cthing.molinillo.errors.CircularDependencyError;
+import org.cthing.molinillo.errors.NoSuchDependencyError;
 import org.cthing.molinillo.errors.ResolverError;
 import org.cthing.molinillo.errors.VersionConflictError;
 import org.cthing.molinillo.fixtures.BerkshelfTestIndex;
 import org.cthing.molinillo.fixtures.BundlerNoPenaltyTestIndex;
 import org.cthing.molinillo.fixtures.BundlerTestIndex;
 import org.cthing.molinillo.fixtures.CocoaPodsTestIndex;
+import org.cthing.molinillo.fixtures.NoSuchDependencyTestIndex;
 import org.cthing.molinillo.fixtures.RandomTestIndex;
 import org.cthing.molinillo.fixtures.TestCase;
 import org.cthing.molinillo.fixtures.TestDependency;
 import org.cthing.molinillo.fixtures.TestIndex;
-import org.cthing.molinillo.fixtures.TestRequirement;
 import org.cthing.molinillo.fixtures.TestSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
@@ -69,17 +70,17 @@ public class ResolverTest {
                         DynamicTest.dynamicTest(testName, () -> {
                             final Set<String> conflicts = testCase.getConflicts();
                             if (conflicts.isEmpty()) {
-                                final DependencyGraph<TestSpecification, TestRequirement> result =
+                                final DependencyGraph<TestSpecification, TestDependency> result =
                                         testCase.resolve(indexClass);
                                 assertThat(result).isEqualTo(testCase.getResult());
                             } else {
                                 final Throwable throwable = catchThrowableOfType(() -> testCase.resolve(indexClass), ResolverError.class);
                                 if (throwable instanceof final CircularDependencyError error) {
-                                    final List<Payload<TestRequirement, TestSpecification>> payloads = error.getPayloads();
+                                    final List<Payload<TestDependency, TestSpecification>> payloads = error.getPayloads();
                                     final Set<String> deps = payloads.stream()
                                                                      .flatMap(payload -> payload.getPossibilitySet().getDependencies()
                                                                                                 .stream()
-                                                                                                .map(TestRequirement::getName))
+                                                                                                .map(TestDependency::getName))
                                                                      .collect(Collectors.toSet());
                                     assertThat(deps).isEqualTo(conflicts);
                                 } else if (throwable instanceof final VersionConflictError error) {
@@ -99,11 +100,10 @@ public class ResolverTest {
     @DisplayName("Includes the source of a user-specified unsatisfied dependency")
     public void testConflictSource() {
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
-        final TestRequirement dep = new TestRequirement(new TestDependency("missing", "3.0"));
-        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final TestDependency dep = new TestDependency("missing", "3.0");
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
         final VersionConflictError versionConflictError =
-                catchThrowableOfType(() -> resolver.resolve(Set.of(dep), graph), VersionConflictError.class);
+                catchThrowableOfType(() -> resolver.resolve(Set.of(dep)), VersionConflictError.class);
         assertThat(versionConflictError.getMessage()).isEqualTo("""
                              Unable to satisfy the following requirements:
 
@@ -146,29 +146,27 @@ public class ResolverTest {
     @DisplayName("Succeeds when allowMissing returns true for the only requirement")
     public void testAllowMissingOnlyRequirement() {
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
-        final TestRequirement dep = new TestRequirement(new TestDependency("missing", "3.0"));
-        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final TestDependency dep = new TestDependency("missing", "3.0");
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
 
         testIndex.setAllowMissing(dep);
-        assertThat(resolver.resolve(Set.of(dep), graph).getVertices()).isEmpty();
+        assertThat(resolver.resolve(Set.of(dep)).getVertices()).isEmpty();
     }
 
     @Test
     @DisplayName("Succeeds when allowMissing returns true for a nested requirement")
     public void testAllowMissingNestedRequirement() {
-        final TestRequirement dep1 = new TestRequirement(new TestDependency("actionpack", "1.2.3"));
-        final TestRequirement dep2 = new TestRequirement(new TestDependency("activesupport", "1.2.3"));
+        final TestDependency dep1 = new TestDependency("actionpack", "1.2.3");
+        final TestDependency dep2 = new TestDependency("activesupport", "1.2.3");
 
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
         final TestIndex spyIndex = spy(testIndex);
         when(spyIndex.searchFor(dep2)).thenReturn(List.of());
 
-        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(spyIndex, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(spyIndex, new ConsoleUI());
 
         spyIndex.setAllowMissing(dep2);
-        final DependencyGraph<TestSpecification, TestRequirement> results = resolver.resolve(Set.of(dep1), graph);
+        final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(Set.of(dep1));
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
@@ -189,14 +187,14 @@ public class ResolverTest {
 
             @Override
             @SuppressWarnings("MethodDoesntCallSuperMethod")
-            public List<TestRequirement> sortDependencies(final List<TestRequirement> dependencies,
-                                                          final DependencyGraph<Payload<TestRequirement, TestSpecification>, TestRequirement> activated,
-                                                          final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
-                final TestRequirement req1 = new TestRequirement(new TestDependency("c", ">= 1.0.0"));
-                final TestRequirement req2 = new TestRequirement(new TestDependency("b", "< 2.0.0"));
-                final TestRequirement req3 = new TestRequirement(new TestDependency("a", "< 2.0.0"));
-                final TestRequirement req4 = new TestRequirement(new TestDependency("c", "= 1.0.0"));
-                final List<TestRequirement> reqs = List.of(req1, req2, req3, req4);
+            public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
+                                                         final DependencyGraph<Payload<TestDependency, TestSpecification>, TestDependency> activated,
+                                                         final Map<String, Conflict<TestDependency, TestSpecification>> conflicts) {
+                final TestDependency req1 = new TestDependency("c", ">= 1.0.0");
+                final TestDependency req2 = new TestDependency("b", "< 2.0.0");
+                final TestDependency req3 = new TestDependency("a", "< 2.0.0");
+                final TestDependency req4 = new TestDependency("c", "= 1.0.0");
+                final List<TestDependency> reqs = List.of(req1, req2, req3, req4);
 
                 return dependencies.stream()
                                    .sorted(Comparator.comparing(dep -> {
@@ -227,14 +225,13 @@ public class ResolverTest {
                 })
         ));
 
-        final TestRequirement dep1 = new TestRequirement(new TestDependency("c", "= 1.0.0"));
-        final TestRequirement dep2 = new TestRequirement(new TestDependency("c", ">= 1.0.0"));
-        final TestRequirement dep3 = new TestRequirement(new TestDependency("z", ">= 1.0.0"));
-        final Set<TestRequirement> deps = Set.of(dep1, dep2, dep3);
+        final TestDependency dep1 = new TestDependency("c", "= 1.0.0");
+        final TestDependency dep2 = new TestDependency("c", ">= 1.0.0");
+        final TestDependency dep3 = new TestDependency("z", ">= 1.0.0");
+        final Set<TestDependency> deps = Set.of(dep1, dep2, dep3);
 
-        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
-        final DependencyGraph<TestSpecification, TestRequirement> results = resolver.resolve(deps, graph);
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+        final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(deps);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
@@ -248,11 +245,11 @@ public class ResolverTest {
     @Test
     @DisplayName("Does not reset parent tracking after swapping when another requirement led to the child")
     public void testParentTracking() {
-        final TestRequirement dep1 = new TestRequirement(new TestDependency("autobuild"));
-        final TestRequirement dep2 = new TestRequirement(new TestDependency("pastel"));
-        final TestRequirement dep3 = new TestRequirement(new TestDependency("tty-prompt"));
-        final TestRequirement dep4 = new TestRequirement(new TestDependency("tty-table"));
-        final Set<TestRequirement> deps = Set.of(dep1, dep2, dep3, dep4);
+        final TestDependency dep1 = new TestDependency("autobuild");
+        final TestDependency dep2 = new TestDependency("pastel");
+        final TestDependency dep3 = new TestDependency("tty-prompt");
+        final TestDependency dep4 = new TestDependency("tty-table");
+        final Set<TestDependency> deps = Set.of(dep1, dep2, dep3, dep4);
 
         final TestIndex index = BundlerTestIndex.fromFixture("rubygems-2017-01-24");
         index.getSpecs().put("autobuild", new TestSpecification[] {
@@ -260,12 +257,11 @@ public class ResolverTest {
                                                                    "pastel", ">= 0.6.0, ~> 0.6.0")),
         });
 
-        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
 
         deps.forEach(index::searchFor);
 
-        final DependencyGraph<TestSpecification, TestRequirement> results = resolver.resolve(deps, graph);
+        final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(deps);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
                                                          .stream()
@@ -286,6 +282,23 @@ public class ResolverTest {
     }
 
     @Test
+    @DisplayName("Handles a NoSuchDependencyError")
+    public void testNoSuchDependency() {
+        final TestDependency dep1 = new TestDependency("autobuild");
+        final TestDependency dep2 = new TestDependency("pastel");
+        final TestDependency dep3 = new TestDependency("tty-prompt");
+        final TestDependency dep4 = new TestDependency("tty-table");
+        final Set<TestDependency> deps = Set.of(dep1, dep2, dep3, dep4);
+
+        final TestIndex index = new NoSuchDependencyTestIndex(new HashMap<>());
+
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+
+        assertThatExceptionOfType(NoSuchDependencyError.class).isThrownBy(() -> resolver.resolve(deps))
+                                                              .withMessageContaining("Unable to find a specification for");
+    }
+
+    @Test
     @DisplayName("Includes the whole path in circular dependency errors")
     public void testCircularDependencyPath() {
         final TestIndex testIndex = new TestIndex(new HashMap<>(Map.of(
@@ -303,12 +316,11 @@ public class ResolverTest {
                 })
         ));
 
-        final Set<TestRequirement> deps = Set.of(new TestRequirement(new TestDependency("a")));
+        final Set<TestDependency> deps = Set.of(new TestDependency("a"));
 
-        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-        final Resolver<TestRequirement, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
         assertThatExceptionOfType(CircularDependencyError.class)
-                .isThrownBy(() -> resolver.resolve(deps, graph))
+                .isThrownBy(() -> resolver.resolve(deps))
                 .withMessage("There is a circular dependency between a and b and c and d");
     }
 
@@ -340,16 +352,14 @@ public class ResolverTest {
                                                   })
                                           ));
 
-                        final TestRequirement dep1 = new TestRequirement(new TestDependency("a"));
-                        final TestRequirement dep2 = new TestRequirement(new TestDependency("b"));
-                        final Set<TestRequirement> deps = Set.of(dep1, dep2);
+                        final TestDependency dep1 = new TestDependency("a");
+                        final TestDependency dep2 = new TestDependency("b");
+                        final Set<TestDependency> deps = Set.of(dep1, dep2);
 
-                        final DependencyGraph<TestRequirement, TestRequirement> graph = new DependencyGraph<>();
-                        final Resolver<TestRequirement, TestSpecification> resolver =
-                                new Resolver<>(testIndex, new ConsoleUI());
+                        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex,
+                                                                                                    new ConsoleUI());
 
-                        final DependencyGraph<TestSpecification, TestRequirement> results =
-                                resolver.resolve(deps, graph);
+                        final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(deps);
                         final List<TestSpecification> testSpecs = results.getVertices()
                                                                          .values()
                                                                          .stream()

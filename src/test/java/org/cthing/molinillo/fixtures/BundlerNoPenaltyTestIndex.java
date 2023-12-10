@@ -11,7 +11,7 @@ public class BundlerNoPenaltyTestIndex extends BundlerTestIndex {
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
-    protected long amountConstrained(final TestRequirement dependency) {
+    protected long amountConstrained(final TestDependency dependency) {
         return 0;
     }
 }

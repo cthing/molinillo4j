@@ -29,39 +29,39 @@ public class BundlerTestIndex extends TestIndex {
 
     @Override
     @SuppressWarnings("MethodDoesntCallSuperMethod")
-    public List<TestRequirement> sortDependencies(final List<TestRequirement> dependencies,
-                                                  final DependencyGraph<Payload<TestRequirement, TestSpecification>,
-                                                          TestRequirement> activated,
-                                                  final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
-        final Function<TestRequirement, Long> payloadFunction = dep -> {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+    public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
+                                                  final DependencyGraph<Payload<TestDependency, TestSpecification>,
+                                                          TestDependency> activated,
+                                                  final Map<String, Conflict<TestDependency, TestSpecification>> conflicts) {
+        final Function<TestDependency, Long> payloadFunction = dep -> {
+            final Vertex<Payload<TestDependency, TestSpecification>, TestDependency> vertex =
                     activated.vertexNamed(nameForDependency(dep)).orElseThrow();
             return vertex.getPayload().isPresent() ? 0L : 1L;
         };
-        final Function<TestRequirement, Long> rootFunction = dep -> {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+        final Function<TestDependency, Long> rootFunction = dep -> {
+            final Vertex<Payload<TestDependency, TestSpecification>, TestDependency> vertex =
                     activated.vertexNamed(nameForDependency(dep)).orElseThrow();
             return vertex.isRoot() ? 0L : 1L;
         };
-        final Function<TestRequirement, Long> constainedFunction = this::amountConstrained;
-        final Function<TestRequirement, Long> conflictsFunction =
+        final Function<TestDependency, Long> constainedFunction = this::amountConstrained;
+        final Function<TestDependency, Long> conflictsFunction =
                 dep -> (conflicts.get(nameForDependency(dep)) != null) ? 0L : 1L;
-        final Function<TestRequirement, Long> countFunction = dep -> {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+        final Function<TestDependency, Long> countFunction = dep -> {
+            final Vertex<Payload<TestDependency, TestSpecification>, TestDependency> vertex =
                     activated.vertexNamed(nameForDependency(dep)).orElseThrow();
             return vertex.getPayload().isEmpty() ? searchFor(dep).size() : 0L;
         };
-        final Comparator<TestRequirement> requirementComparator = Comparator.comparing(payloadFunction)
-                                                                            .thenComparing(rootFunction)
-                                                                            .thenComparing(constainedFunction)
-                                                                            .thenComparing(conflictsFunction)
-                                                                            .thenComparing(countFunction);
+        final Comparator<TestDependency> requirementComparator = Comparator.comparing(payloadFunction)
+                                                                           .thenComparing(rootFunction)
+                                                                           .thenComparing(constainedFunction)
+                                                                           .thenComparing(conflictsFunction)
+                                                                           .thenComparing(countFunction);
         return dependencies.stream()
                            .sorted(requirementComparator)
                            .collect(Collectors.toList());
     }
 
-    protected long amountConstrained(final TestRequirement dependency) {
+    protected long amountConstrained(final TestDependency dependency) {
         return this.amountConstrained.computeIfAbsent(dependency.getName(), key -> {
             final long all = getSpecs().computeIfAbsent(dependency.getName(), k -> new TestSpecification[0]).length;
             if (all <= 1) {

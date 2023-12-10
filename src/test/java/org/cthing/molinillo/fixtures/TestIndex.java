@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,13 +25,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 @SuppressWarnings("MethodDoesntCallSuperMethod")
-public class TestIndex extends AbstractSpecificationProvider<TestRequirement, TestSpecification> {
+public class TestIndex extends AbstractSpecificationProvider<TestDependency, TestSpecification> {
 
     private static final Map<String, Map<String, TestSpecification[]>> SPECS_FROM_FIXTURE = new HashMap<>();
 
     private final Map<String, TestSpecification[]> specs;
-    private final Map<TestRequirement, List<TestSpecification>> searchResults = new HashMap<>();
-    private Set<TestRequirement> allowMissingRequirements = new HashSet<>();
+    private final Map<TestDependency, List<TestSpecification>> searchResults = new HashMap<>();
+    private Set<TestDependency> allowMissingRequirements = new HashSet<>();
 
     public TestIndex(final Map<String, TestSpecification[]> specsByName) {
         this.specs = specsByName;
@@ -68,38 +67,34 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     }
 
     @Override
-    public boolean requirementSatisfiedBy(final TestRequirement requirement,
-                                          final DependencyGraph<Payload<TestRequirement, TestSpecification>,
-                                                  TestRequirement> activated,
+    public boolean requirementSatisfiedBy(final TestDependency requirement,
+                                          final DependencyGraph<Payload<TestDependency, TestSpecification>,
+                                                  TestDependency> activated,
                                           final TestSpecification specification) {
         if (specification.getVersion().isPreRelease() && !requirement.isPreRelease()) {
-            final Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement> vertex =
+            final Vertex<Payload<TestDependency, TestSpecification>, TestDependency> vertex =
                     activated.vertexNamed(specification.getName()).orElseThrow();
-            if (vertex.requirements().stream().noneMatch(TestRequirement::isPreRelease)) {
+            if (vertex.requirements().stream().noneMatch(TestDependency::isPreRelease)) {
                 return false;
             }
         }
 
-        if (requirement.isSpecification()) {
-            return requirement.getSpecification().getVersion().equals(specification.getVersion());
-        }
-        return requirement.getDependency().getVersionConstraint().allows(specification.getVersion());
+        return requirement.getVersionConstraint().allows(specification.getVersion());
     }
 
     @Override
-    public List<TestSpecification> searchFor(final TestRequirement dependency) {
+    public List<TestSpecification> searchFor(final TestDependency dependency) {
         return this.searchResults.computeIfAbsent(dependency, dep -> {
-            final TestDependency testDependency = dep.getDependency();
-            final TestSpecification[] testSpecs = this.specs.computeIfAbsent(testDependency.getName(),
+            final TestSpecification[] testSpecs = this.specs.computeIfAbsent(dep.getName(),
                                                                              key -> new TestSpecification[0]);
             return Arrays.stream(testSpecs)
-                         .filter(spec -> testDependency.getVersionConstraint().allows(spec.getVersion()))
+                         .filter(spec -> dep.getVersionConstraint().allows(spec.getVersion()))
                          .collect(Collectors.toList());
         });
     }
 
     @Override
-    public String nameForDependency(final TestRequirement dependency) {
+    public String nameForDependency(final TestDependency dependency) {
         return dependency.getName();
     }
 
@@ -109,32 +104,29 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     }
 
     @Override
-    public Set<TestRequirement> dependenciesFor(final TestSpecification specification) {
-        return specification.getDependencies()
-                            .stream()
-                            .map(TestRequirement::new)
-                            .collect(Collectors.toCollection(LinkedHashSet::new));
+    public Set<TestDependency> dependenciesFor(final TestSpecification specification) {
+        return specification.getDependencies();
     }
 
     @Override
-    public List<TestRequirement> sortDependencies(final List<TestRequirement> dependencies,
-                                                  final DependencyGraph<Payload<TestRequirement, TestSpecification>,
-                                                          TestRequirement> activated,
-                                                  final Map<String, Conflict<TestRequirement, TestSpecification>> conflicts) {
-        final Function<TestRequirement, Integer> payloadFunction = dep -> {
-            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
+    public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
+                                                 final DependencyGraph<Payload<TestDependency, TestSpecification>,
+                                                         TestDependency> activated,
+                                                 final Map<String, Conflict<TestDependency, TestSpecification>> conflicts) {
+        final Function<TestDependency, Integer> payloadFunction = dep -> {
+            final Optional<Vertex<Payload<TestDependency, TestSpecification>, TestDependency>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
             return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? 1 : 0;
         };
-        final Function<TestRequirement, Integer> preReleaseFunction = dep -> dep.isPreRelease() ? 0 : 1;
-        final Function<TestRequirement, Integer> conflictsFunction =
+        final Function<TestDependency, Integer> preReleaseFunction = dep -> dep.isPreRelease() ? 0 : 1;
+        final Function<TestDependency, Integer> conflictsFunction =
                 dep -> conflicts.containsKey(nameForDependency(dep)) ? 0 : 1;
-        final Function<TestRequirement, Integer> countFunction = dep -> {
-            final Optional<Vertex<Payload<TestRequirement, TestSpecification>, TestRequirement>> vertexOpt =
+        final Function<TestDependency, Integer> countFunction = dep -> {
+            final Optional<Vertex<Payload<TestDependency, TestSpecification>, TestDependency>> vertexOpt =
                     activated.vertexNamed(nameForDependency(dep));
             return (vertexOpt.isEmpty() || vertexOpt.get().getPayload().isEmpty()) ? searchFor(dep).size() : 0;
         };
-        final Comparator<TestRequirement> requirementComparator = Comparator.comparing(payloadFunction)
+        final Comparator<TestDependency> requirementComparator = Comparator.comparing(payloadFunction)
                                                                            .thenComparing(preReleaseFunction)
                                                                            .thenComparing(conflictsFunction)
                                                                            .thenComparing(countFunction);
@@ -144,11 +136,11 @@ public class TestIndex extends AbstractSpecificationProvider<TestRequirement, Te
     }
 
     @Override
-    public boolean allowMissing(final TestRequirement dependency) {
+    public boolean allowMissing(final TestDependency dependency) {
         return this.allowMissingRequirements.contains(dependency);
     }
 
-    public void setAllowMissing(final TestRequirement... requirements) {
+    public void setAllowMissing(final TestDependency... requirements) {
         this.allowMissingRequirements = Set.of(requirements);
     }
 }
