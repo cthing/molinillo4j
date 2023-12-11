@@ -40,13 +40,13 @@ public final class Conflict<R, S> {
     /**
      * Constructs a conflict.
      *
-     * @param requirement Requirement that immediately led to the conflict
+     * @param requirement Requirement that directly led to the conflict
      * @param requirements Requirements that caused the conflict
-     * @param existing Existing specification that was in conflict with the possibility
+     * @param existing Existing specification that was in conflict with the possibility set
      * @param possibilitySet Set of specifications that were unable to be activated due to a conflict
      * @param lockedRequirement Locking requirement relevant to this conflict
      * @param requirementTrees Requirement trees that led to every requirement for the conflicting name
-     * @param activatedByName Specification that are already activated
+     * @param activatedByName Specifications that are already activated
      * @param underlyingError Error that has occurred during resolution, and will be raised at the end of it if no
      *      resolution is found.
      */
@@ -64,37 +64,77 @@ public final class Conflict<R, S> {
         this.underlyingError = underlyingError;
     }
 
+    /**
+     * Obtains the requirement that directly led to the conflict.
+     *
+     * @return Conflicting requirement.
+     */
     public R getRequirement() {
         return this.requirement;
     }
 
+    /**
+     * Obtains the requirements that caused the conflict.
+     *
+     * @return Requirements that caused the conflict.
+     */
     public Map<?, Set<R>> getRequirements() {
         return this.requirements;
     }
 
+    /**
+     * Obtains the existing specification that was in conflict with the possibility set.
+     *
+     * @return Existing conflicting specification.
+     */
     @Nullable
     public S getExisting() {
         return this.existing;
     }
 
+    /**
+     * Obtains the possibilities that were in conflict with the current specification.
+     *
+     * @return Possibilities in conflict with the current specification.
+     */
     @Nullable
     public PossibilitySet<R, S> getPossibilitySet() {
         return this.possibilitySet;
     }
 
+    /**
+     * Obtains the locking requirement pertaining to this conflict.
+     *
+     * @return Locking requirement pertaining to this conflict.
+     */
     @Nullable
     public R getLockedRequirement() {
         return this.lockedRequirement;
     }
 
+    /**
+     * Obtains the requirement trees that led to every requirement for the conflicting name.
+     *
+     * @return Conflicting requirement trees.
+     */
     public List<List<R>> getRequirementTrees() {
         return this.requirementTrees;
     }
 
+    /**
+     * Obtains the activated specifications.
+     *
+     * @return Activated specifications as a map of specification name to specification.
+     */
     public Map<String, S> getActivatedByName() {
         return this.activatedByName;
     }
 
+    /**
+     * Obtains the error that occurred during resolution, and will be thrown at the end if no resolution is found.
+     *
+     * @return Error to be thrown at the conclusion of resolution.
+     */
     @Nullable
     public RuntimeException getUnderlyingError() {
         return this.underlyingError;

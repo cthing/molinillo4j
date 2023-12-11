@@ -54,6 +54,11 @@ public class VersionConflictError extends ResolverError {
         @Nullable
         private BiFunction<String, Conflict<R, S>, String> fullMessageForConflict;
 
+        /**
+         * Obtains the name of the solver.
+         *
+         * @return Name of the solver.
+         */
         public Optional<String> getSolverName() {
             return Optional.ofNullable(this.solverName);
         }
@@ -69,6 +74,11 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains the generic name of a possibility.
+         *
+         * @return Generic name of a possibility.
+         */
         public Optional<String> getPossibilityType() {
             return Optional.ofNullable(this.possibilityType);
         }
@@ -84,6 +94,11 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains the function to reduce the requirement trees.
+         *
+         * @return Function to reduce the requirement trees.
+         */
         public Optional<Function<List<List<R>>, List<List<R>>>> getReduceTrees() {
             return Optional.ofNullable(this.reduceTrees);
         }
@@ -99,6 +114,11 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains the function to pretty-print requirements.
+         *
+         * @return Function to pretty-print requirements.
+         */
         public Optional<Function<R, String>> getPrintableRequirement() {
             return Optional.ofNullable(this.printableRequirement);
         }
@@ -114,12 +134,17 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains any additional output for the conflict message.
+         *
+         * @return Additional text for the conflict message.
+         */
         public Optional<BiFunction<String, Conflict<R, S>, String>> getAdditionMessageForConflict() {
             return Optional.ofNullable(this.additionMessageForConflict);
         }
 
         /**
-         * Sets a function for generating additional output for the message.
+         * Sets a function for generating additional output for the conflict message.
          *
          * @param additionMessageForConflict Function for generating additional output
          * @return This option instance.
@@ -130,6 +155,11 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains the function to return a version number from a possibility.
+         *
+         * @return Function to return a version number from a possibility.
+         */
         public Optional<Function<S, String>> getVersionForSpec() {
             return Optional.ofNullable(this.versionForSpec);
         }
@@ -145,6 +175,11 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains the function for generating the incompatible version message.
+         *
+         * @return Function for generating the incompatible version message.
+         */
         public Optional<BiFunction<String, Conflict<R, S>, String>> getIncompatibleVersionMessageForConflict() {
             return Optional.ofNullable(this.incompatibleVersionMessageForConflict);
         }
@@ -161,6 +196,11 @@ public class VersionConflictError extends ResolverError {
             return this;
         }
 
+        /**
+         * Obtains the replacement for the entire conflict message.
+         *
+         * @return Replacement for the entire conflict message.
+         */
         public Optional<BiFunction<String, Conflict<R, S>, String>> getFullMessageForConflict() {
             return Optional.ofNullable(this.fullMessageForConflict);
         }
@@ -182,9 +222,20 @@ public class VersionConflictError extends ResolverError {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** Conflicts describing the error. */
     private final Map<String, Conflict<?, ?>> conflicts;
+
+    /** Specification provider used during resolution. */
     private final SpecificationProvider<?, ?> specificationProvider;
 
+    /**
+     * Constructs a version conflict error for the specified conflicts.
+     *
+     * @param <R> Requirement type
+     * @param <S> Specification type
+     * @param conflicts Conflicts describing the error
+     * @param specificationProvider Specification provider used during resolution
+     */
     public <R, S> VersionConflictError(final Map<String, Conflict<R, S>> conflicts,
                                 final SpecificationProvider<R, S> specificationProvider) {
         super("Unable to satisfy the following requirements:\n\n" + buildErrorMessage(conflicts));

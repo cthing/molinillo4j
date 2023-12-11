@@ -19,6 +19,7 @@ public class CircularDependencyError extends ResolverError {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** Vertices comprising the circular path. */
     private final Collection<Vertex<?, ?>> vertices;
 
     /**

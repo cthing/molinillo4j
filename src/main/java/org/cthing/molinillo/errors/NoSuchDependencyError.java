@@ -15,7 +15,10 @@ public class NoSuchDependencyError extends ResolverError {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** Dependency that could not be found. */
     private final Object dependency;
+
+    /** Dependents of the dependency that could not be found. */
     private final Set<Object> requiredBy;
 
     /**

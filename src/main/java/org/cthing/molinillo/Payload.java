@@ -20,11 +20,21 @@ public class Payload<R, S> {
     @Nullable
     private final S specification;
 
+    /**
+     * Constructs a payload based on the specified possibility set.
+     *
+     * @param possibilitySet Possibility set for the payload
+     */
     public Payload(final PossibilitySet<R, S> possibilitySet) {
         this.possibilitySet = possibilitySet;
         this.specification = null;
     }
 
+    /**
+     * Constructs a payload based on the specified specification.
+     *
+     * @param specification Specification for the payload
+     */
     public Payload(final S specification) {
         this.possibilitySet = null;
         this.specification = specification;
