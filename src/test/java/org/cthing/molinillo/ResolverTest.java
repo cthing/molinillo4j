@@ -74,14 +74,16 @@ public class ResolverTest {
                                         testCase.resolve(indexClass);
                                 assertThat(result).isEqualTo(testCase.getResult());
                             } else {
-                                final Throwable throwable = catchThrowableOfType(() -> testCase.resolve(indexClass), ResolverError.class);
+                                final Throwable throwable =
+                                        catchThrowableOfType(() -> testCase.resolve(indexClass), ResolverError.class);
                                 if (throwable instanceof final CircularDependencyError error) {
                                     final List<Payload<TestDependency, TestSpecification>> payloads = error.getPayloads();
-                                    final Set<String> deps = payloads.stream()
-                                                                     .flatMap(payload -> payload.getPossibilitySet().getDependencies()
-                                                                                                .stream()
-                                                                                                .map(TestDependency::getName))
-                                                                     .collect(Collectors.toSet());
+                                    final Set<String> deps =
+                                            payloads.stream()
+                                                    .flatMap(payload -> payload.getPossibilitySet().getDependencies()
+                                                                               .stream()
+                                                                               .map(TestDependency::getName))
+                                                    .collect(Collectors.toSet());
                                     assertThat(deps).isEqualTo(conflicts);
                                 } else if (throwable instanceof final VersionConflictError error) {
                                     assertThat(error.getConflicts().keySet()).isEqualTo(conflicts);
@@ -101,7 +103,7 @@ public class ResolverTest {
     public void testConflictSource() {
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
         final TestDependency dep = new TestDependency("missing", "3.0");
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new DebugUI());
         final VersionConflictError versionConflictError =
                 catchThrowableOfType(() -> resolver.resolve(Set.of(dep)), VersionConflictError.class);
         assertThat(versionConflictError.getMessage()).isEqualTo("""
@@ -147,7 +149,7 @@ public class ResolverTest {
     public void testAllowMissingOnlyRequirement() {
         final TestIndex testIndex = TestIndex.fromFixture("awesome");
         final TestDependency dep = new TestDependency("missing", "3.0");
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new DebugUI());
 
         testIndex.setAllowMissing(dep);
         assertThat(resolver.resolve(Set.of(dep)).getVertices()).isEmpty();
@@ -163,7 +165,7 @@ public class ResolverTest {
         final TestIndex spyIndex = spy(testIndex);
         when(spyIndex.searchFor(dep2)).thenReturn(List.of());
 
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(spyIndex, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(spyIndex, new DebugUI());
 
         spyIndex.setAllowMissing(dep2);
         final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(Set.of(dep1));
@@ -190,11 +192,10 @@ public class ResolverTest {
             public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
                                                          final DependencyGraph<Payload<TestDependency, TestSpecification>, TestDependency> activated,
                                                          final Map<String, Conflict<TestDependency, TestSpecification>> conflicts) {
-                final TestDependency req1 = new TestDependency("c", ">= 1.0.0");
-                final TestDependency req2 = new TestDependency("b", "< 2.0.0");
-                final TestDependency req3 = new TestDependency("a", "< 2.0.0");
-                final TestDependency req4 = new TestDependency("c", "= 1.0.0");
-                final List<TestDependency> reqs = List.of(req1, req2, req3, req4);
+                final List<TestDependency> reqs = List.of(new TestDependency("c", ">= 1.0.0"),
+                                                          new TestDependency("b", "< 2.0.0"),
+                                                          new TestDependency("a", "< 2.0.0"),
+                                                          new TestDependency("c", "= 1.0.0"));
 
                 return dependencies.stream()
                                    .sorted(Comparator.comparing(dep -> {
@@ -225,12 +226,11 @@ public class ResolverTest {
                 })
         ));
 
-        final TestDependency dep1 = new TestDependency("c", "= 1.0.0");
-        final TestDependency dep2 = new TestDependency("c", ">= 1.0.0");
-        final TestDependency dep3 = new TestDependency("z", ">= 1.0.0");
-        final Set<TestDependency> deps = Set.of(dep1, dep2, dep3);
+        final Set<TestDependency> deps = Set.of(new TestDependency("c", "= 1.0.0"),
+                                                new TestDependency("c", ">= 1.0.0"),
+                                                new TestDependency("z", ">= 1.0.0"));
 
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new DebugUI());
         final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(deps);
         final List<TestSpecification> testSpecs = results.getVertices()
                                                          .values()
@@ -245,11 +245,10 @@ public class ResolverTest {
     @Test
     @DisplayName("Does not reset parent tracking after swapping when another requirement led to the child")
     public void testParentTracking() {
-        final TestDependency dep1 = new TestDependency("autobuild");
-        final TestDependency dep2 = new TestDependency("pastel");
-        final TestDependency dep3 = new TestDependency("tty-prompt");
-        final TestDependency dep4 = new TestDependency("tty-table");
-        final Set<TestDependency> deps = Set.of(dep1, dep2, dep3, dep4);
+        final Set<TestDependency> deps = Set.of(new TestDependency("autobuild"),
+                                                new TestDependency("pastel"),
+                                                new TestDependency("tty-prompt"),
+                                                new TestDependency("tty-table"));
 
         final TestIndex index = BundlerTestIndex.fromFixture("rubygems-2017-01-24");
         index.getSpecs().put("autobuild", new TestSpecification[] {
@@ -257,7 +256,7 @@ public class ResolverTest {
                                                                    "pastel", ">= 0.6.0, ~> 0.6.0")),
         });
 
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new DebugUI());
 
         deps.forEach(index::searchFor);
 
@@ -284,15 +283,14 @@ public class ResolverTest {
     @Test
     @DisplayName("Handles a NoSuchDependencyError")
     public void testNoSuchDependency() {
-        final TestDependency dep1 = new TestDependency("autobuild");
-        final TestDependency dep2 = new TestDependency("pastel");
-        final TestDependency dep3 = new TestDependency("tty-prompt");
-        final TestDependency dep4 = new TestDependency("tty-table");
-        final Set<TestDependency> deps = Set.of(dep1, dep2, dep3, dep4);
+        final Set<TestDependency> deps = Set.of(new TestDependency("autobuild"),
+                                                new TestDependency("pastel"),
+                                                new TestDependency("tty-prompt"),
+                                                new TestDependency("tty-table"));
 
         final TestIndex index = new NoSuchDependencyTestIndex(new HashMap<>());
 
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(index, new DebugUI());
 
         assertThatExceptionOfType(NoSuchDependencyError.class).isThrownBy(() -> resolver.resolve(deps))
                                                               .withMessageContaining("Unable to find a specification for");
@@ -318,7 +316,7 @@ public class ResolverTest {
 
         final Set<TestDependency> deps = Set.of(new TestDependency("a"));
 
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new ConsoleUI());
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new DebugUI());
         assertThatExceptionOfType(CircularDependencyError.class)
                 .isThrownBy(() -> resolver.resolve(deps))
                 .withMessage("There is a circular dependency between a and b and c and d");
@@ -352,14 +350,13 @@ public class ResolverTest {
                                                   })
                                           ));
 
-                        final TestDependency dep1 = new TestDependency("a");
-                        final TestDependency dep2 = new TestDependency("b");
-                        final Set<TestDependency> deps = Set.of(dep1, dep2);
+                        final Set<TestDependency> deps = Set.of(new TestDependency("a"), new TestDependency("b"));
 
                         final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex,
-                                                                                                    new ConsoleUI());
+                                                                                                    new DebugUI());
 
                         final DependencyGraph<TestSpecification, TestDependency> results = resolver.resolve(deps);
+
                         final List<TestSpecification> testSpecs = results.getVertices()
                                                                          .values()
                                                                          .stream()

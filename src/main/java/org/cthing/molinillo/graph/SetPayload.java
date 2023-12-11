@@ -9,7 +9,7 @@ import org.cthing.molinillo.DependencyGraph;
 
 
 /**
- * Action that sets a payload on a graph vertex.
+ * Action that sets a payload on a dependency graph vertex.
  *
  * @param <P> Payload type
  * @param <R> Requirement type

@@ -17,7 +17,16 @@ public class Resolver<R, S> {
     private final UI resolverUI;
 
     /**
-     * Constructs the resolver.
+     * Constructs the resolver with the specified specification provider and a no-op user interface.
+     *
+     * @param specificationProvider Provides information on the dependencies
+     */
+    public Resolver(final SpecificationProvider<R, S> specificationProvider) {
+        this(specificationProvider, new DefaultUI());
+    }
+
+    /**
+     * Constructs the resolver with the specified specification provider and user interface.
      *
      * @param specificationProvider Provides information on the dependencies
      * @param resolverUI Provides output on the progress of the resolution process

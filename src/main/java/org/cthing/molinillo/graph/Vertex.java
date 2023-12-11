@@ -11,7 +11,9 @@ import javax.annotation.Nullable;
 
 
 /**
- * Represents a vertex in the dependency graph.
+ * Represents a vertex in the dependency graph. A vertex contains a set of edges that point inward from other
+ * vertices and a set of edges that point outward to other vertices. A vertex may contain a payload and may
+ * have requirements set on it.
  *
  * @param <P> Payload type
  * @param <R> Requirement type
@@ -80,18 +82,18 @@ public class Vertex<P, R> {
     }
 
     /**
-     * Indicates whether this is the root vertex of the dependency graph.
+     * Indicates whether this is a root vertex of the dependency graph.
      *
-     * @return {@code true} if the vertex is the root of the dependency graph.
+     * @return {@code true} if the vertex is a root of the dependency graph.
      */
     public boolean isRoot() {
         return this.root;
     }
 
     /**
-     * Sets whether this is the root vertex of the dependency graph.
+     * Sets whether this is a root vertex of the dependency graph.
      *
-     * @param root {@code true} to mark this vertex as the root of the dependency graph
+     * @param root {@code true} to mark this vertex as a root of the dependency graph
      */
     public void setRoot(final boolean root) {
         this.root = root;
@@ -173,11 +175,9 @@ public class Vertex<P, R> {
      * @return {@code true} if a path exists between this vertex and the specified vertex.
      */
     private boolean pathTo(final Vertex<P, R> other, final Set<Vertex<P, R>> visited) {
-        final boolean added = visited.add(this);
-
         // Handle a cycle in the graph. If the other vertex has not been found, stop searching when
         // visiting an already visited vertex.
-        if (!added) {
+        if (!visited.add(this)) {
             return false;
         }
 

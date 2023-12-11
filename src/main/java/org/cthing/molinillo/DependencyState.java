@@ -43,12 +43,9 @@ public class DependencyState<R, S> extends ResolutionState<R, S> {
      */
     public PossibilityState<R, S> popPossibilityState() {
         final List<PossibilitySet<R, S>> possibilities = getPossibilities();
-        final PossibilitySet<R, S> possibility;
-        if (possibilities.isEmpty()) {
-            possibility = null;
-        } else {
-            possibility = possibilities.remove(possibilities.size() - 1);
-        }
+        final PossibilitySet<R, S> possibility = possibilities.isEmpty()
+                                                 ? null
+                                                 : possibilities.remove(possibilities.size() - 1);
         final PossibilityState<R, S> state = new PossibilityState<>(getName(),
                                                                     new ArrayList<>(getRequirements()),
                                                                     getActivated(),

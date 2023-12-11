@@ -1,7 +1,6 @@
 package org.cthing.molinillo;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -31,7 +30,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
 
     private final Set<R> requirementsUnwoundToInstead;
 
-    private int reversedTreeIndex = -100;
+    private int reversedTreeIndex = -1;
 
     @Nullable
     private List<R> requirementsToAvoid;
@@ -121,12 +120,17 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return Index of the state requirement.
      */
+    @SuppressWarnings("Convert2streamapi")
     public int reversedRequirementTreeIndex() {
         if (this.reversedTreeIndex < 0) {
             if (this.stateRequirement != null) {
-                final List<R> reversedRequirementTree = new ArrayList<>(this.requirementTree);
-                Collections.reverse(reversedRequirementTree);
-                this.reversedTreeIndex = reversedRequirementTree.indexOf(this.stateRequirement);
+                final int lastIdx = this.requirementTree.size() - 1;
+                for (int i = lastIdx; i >= 0; i--) {
+                    if (this.stateRequirement.equals(this.requirementTree.get(i))) {
+                        this.reversedTreeIndex = lastIdx - i;
+                        break;
+                    }
+                }
             } else {
                 this.reversedTreeIndex = -1;
             }

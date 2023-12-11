@@ -49,7 +49,6 @@ public class Resolution<R, S> {
     private long startedAt;
     private final List<ResolutionState<R, S>> states;
 
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final Map<R, List<Integer>> parentsOf;
 
     /**
@@ -81,8 +80,7 @@ public class Resolution<R, S> {
         startResolution();
 
         try {
-            Optional<ResolutionState<R, S>> stateOpt = getState();
-            while (stateOpt.isPresent()) {
+            for (Optional<ResolutionState<R, S>> stateOpt = getState(); stateOpt.isPresent(); stateOpt = getState()) {
                 final ResolutionState<R, S> state = stateOpt.get();
 
                 if (state.getRequirement().isEmpty() && state.getRequirements().isEmpty()) {
@@ -92,14 +90,13 @@ public class Resolution<R, S> {
                 indicateProgress();
 
                 if (state instanceof final DependencyState<R, S> dependencyState) {
-                    debug(getDepth(), "Creating possibility state for %s (%d remaining)", getRequirement().orElse(null),
-                          getPossibilities().size());
+                    printf(getDepth(), "Creating possibility state for %s (%d remaining)", getRequirement().orElse(null),
+                           getPossibilities().size());
                     final PossibilityState<R, S> possibilityState = dependencyState.popPossibilityState();
                     this.states.add(possibilityState);
                 }
 
                 processTopmostState();
-                stateOpt = getState();
             }
 
             return resolveActivatedSpecs();
@@ -332,8 +329,8 @@ public class Resolution<R, S> {
 
         pushInitialState();
 
-        debug(0, "Starting resolution (%s)\nUser-requested dependencies: %s",
-              new SimpleDateFormat(DATE_FORMAT).format(new Date(this.startedAt)), this.originalRequested);
+        printf(0, "Starting resolution (%s)\nUser-requested dependencies: %s",
+               new SimpleDateFormat(DATE_FORMAT).format(new Date(this.startedAt)), this.originalRequested);
 
         this.resolverUi.beforeResolution();
     }
@@ -346,27 +343,29 @@ public class Resolution<R, S> {
 
         this.resolverUi.afterResolution();
 
-        debug(0, "Finished resolution (%d steps)", this.iterationCount);
-        debug(0, "                    (Took %d ms)", endedAt - this.startedAt);
-        debug(0, "                    (%s)", new SimpleDateFormat(DATE_FORMAT).format(new Date(endedAt)));
+        printf(0, "Finished resolution (%d steps)", this.iterationCount);
+        printf(0, "                    (Took %d ms)", endedAt - this.startedAt);
+        printf(0, "                    (%s)", new SimpleDateFormat(DATE_FORMAT).format(new Date(endedAt)));
 
         if (getState().isPresent()) {
-            debug(0, "Unactivated: %s", getActivated().getVertices()
-                                                      .values()
-                                                      .stream()
-                                                      .filter(vertex -> vertex.getPayload().isEmpty())
-                                                      .map(Vertex::getName)
-                                                      .collect(Collectors.joining(", ")));
-            debug(0, "Activated: %s", getActivated().getVertices()
-                                                    .values()
-                                                    .stream()
-                                                    .filter(vertex -> vertex.getPayload().isPresent())
-                                                    .map(vertex -> vertex.getPayload().orElseThrow().toString())
-                                                    .collect(Collectors.joining(", ")));
+            printf(0, "Unactivated: %s", getActivated().getVertices()
+                                                       .values()
+                                                       .stream()
+                                                       .filter(vertex -> vertex.getPayload().isEmpty())
+                                                       .map(Vertex::getName)
+                                                       .collect(Collectors.joining(", ")));
+            printf(0, "Activated: %s", getActivated().getVertices()
+                                                     .values()
+                                                     .stream()
+                                                     .filter(vertex -> vertex.getPayload().isPresent())
+                                                     .map(vertex -> vertex.getPayload().orElseThrow().toString())
+                                                     .collect(Collectors.joining(", ")));
         }
     }
 
     private DependencyGraph<S, R> resolveActivatedSpecs() {
+        // Pick the first possibility (i.e. specification) among those that satisfies the requirement and set it on
+        // the vertex payload.
         for (final Vertex<Payload<R, S>, R> vertex : getActivated().getVertices().values()) {
             vertex.getPayload().ifPresent(payload -> {
                 final List<S> possibilities = payload.getPossibilitySet().getPossibilities();
@@ -382,6 +381,8 @@ public class Resolution<R, S> {
             });
         }
 
+        // Generate a clone of the dependency graph but directly set the specification as the vertex payload rather
+        // that the specification wrapped in a Payload instance.
         return getActivated().cloneGraph(Payload::getSpecification);
     }
 
@@ -444,8 +445,8 @@ public class Resolution<R, S> {
     private void unwindForConflict() {
         final UnwindDetails<R, S> detailsForUnwind = buildDetailsForUnwind();
         final List<UnwindDetails<R, S>> unwindOptions = new ArrayList<>(getUnusedUnwindOptions());
-        debug(getDepth(), "Unwinding for conflict: %s to %d", getRequirement().orElse(null),
-              detailsForUnwind.getStateIndex() / 2);
+        printf(getDepth(), "Unwinding for conflict: %s to %d", getRequirement().orElse(null),
+               detailsForUnwind.getStateIndex() / 2);
 
         final Map<String, Conflict<R, S>> conflicts = getConflicts();
         final List<ResolutionState<R, S>> statesToSlice = this.states.subList(detailsForUnwind.getStateIndex() + 1,
@@ -598,11 +599,14 @@ public class Resolution<R, S> {
                 while (grandparentR != null) {
                     partialTree.add(0, grandparentR);
                     requirementState = findStateFor(grandparentR).orElseThrow();
-                    final R pR = parentR;
-                    if (requirementState.getPossibilities().stream().anyMatch(set -> !set.getDependencies().contains(pR))) {
+
+                    for (final PossibilitySet<R, S> possibilitySet : requirementState.getPossibilities()) {
+                        if (!possibilitySet.getDependencies().contains(parentR)) {
                             unwindDetails.add(new UnwindDetails<>(this.states.indexOf(requirementState),
-                                                                  grandparentR, partialTree, bindingRequirements, trees,
-                                                                  new HashSet<>()));
+                                                                  grandparentR, partialTree, bindingRequirements,
+                                                                  trees, new HashSet<>()));
+                            break;
+                        }
                     }
 
                     parentR = grandparentR;
@@ -713,7 +717,8 @@ public class Resolution<R, S> {
                                              .filter(possibilitySet ->
                                                          possibilitySet.getPossibilities()
                                                                        .stream()
-                                                                       .anyMatch(poss -> possibilitySatisfiesRequirements(poss, unwind.getConflictingRequirements()))
+                                                                       .anyMatch(poss -> possibilitySatisfiesRequirements(
+                                                                               poss, unwind.getConflictingRequirements()))
                                              )
                               )
                               .toList();
@@ -934,13 +939,14 @@ public class Resolution<R, S> {
         final Map<String, S> activatedByName = new HashMap<>();
         for (final Vertex<Payload<R, S>, R> v : getActivated().getVertices().values()) {
             if (v.getPayload().isPresent()) {
-                activatedByName.put(v.getName(), v.getPayload().get().getPossibilitySet().getLatestVersion().orElse(null));
+                activatedByName.put(v.getName(),
+                                    v.getPayload().get().getPossibilitySet().getLatestVersion().orElse(null));
             }
         }
 
         final R requirement = getRequirement().orElseThrow();
-        final Optional<S> existingSpecification = vertex.getPayload()
-                                                        .flatMap(payload -> payload.getPossibilitySet().getLatestVersion());
+        final Optional<S> existingSpecification =
+                vertex.getPayload().flatMap(payload -> payload.getPossibilitySet().getLatestVersion());
         @Nullable final PossibilitySet<R, S> possibilitySet = getPossibilities().isEmpty()
                                                               ? null
                                                               : getPossibilities().get(getPossibilities().size() - 1);
@@ -1007,25 +1013,25 @@ public class Resolution<R, S> {
     }
 
     /**
-     * Writes debugging output.
+     * Writes output to the registered user interface object.
      *
      * @param depth Current depth of the resolution process
      * @param format Output string passed to {@link String#format(String, Object...)}
      * @param args Arguments for the output string passed to {@link String#format(String, Object...)}
      */
-    private void debug(final int depth, final String format, final Object... args) {
-        this.resolverUi.debug(depth, format, args);
+    private void printf(final int depth, final String format, final Object... args) {
+        this.resolverUi.printf(depth, format, args);
     }
 
     /**
      * Attempts to activate the current possibility.
      */
     private void attemptToActivate() {
-        debug(getDepth(), "Attempting to activate %s", getPossibility());
+        printf(getDepth(), "Attempting to activate %s", getPossibility());
         final Vertex<Payload<R, S>, R> existingVertex = getActivated().vertexNamed(getName()).orElseThrow();
 
         if (existingVertex.getPayload().isPresent()) {
-            debug(getDepth(), "Found existing spec (%s)", existingVertex.getPayload().get());
+            printf(getDepth(), "Found existing spec (%s)", existingVertex.getPayload().get());
             attemptToFilterExistingSpec(existingVertex);
         } else {
             final Optional<S> latest = getPossibility().getLatestVersion();
@@ -1059,7 +1065,7 @@ public class Resolution<R, S> {
             pushStateForRequirements(newRequirements, false);
         } else {
             createConflict(null);
-            debug(getDepth(), "Unsatisfied by existing spec (%s)", vertex.getPayload().orElseThrow());
+            printf(getDepth(), "Unsatisfied by existing spec (%s)", vertex.getPayload().orElseThrow());
             unwindForConflict();
         }
     }
@@ -1095,7 +1101,7 @@ public class Resolution<R, S> {
      */
     private void activateNewSpec() {
         getConflicts().remove(getName());
-        debug(getDepth(), "Activated %s at %s", getName(), getPossibility());
+        printf(getDepth(), "Activated %s at %s", getName(), getPossibility());
         getActivated().setPayload(getName(), new Payload<>(getPossibility()));
         requireNestedDependenciesFor(getPossibility());
     }
@@ -1107,9 +1113,9 @@ public class Resolution<R, S> {
      */
     private void requireNestedDependenciesFor(final PossibilitySet<R, S> possibilitySet) {
         final Set<R> nestedDependencies = possibilitySet.getDependencies();
-        debug(getDepth(), "Requiring nested dependencies (%s)", nestedDependencies.stream()
-                                                                                  .map(Object::toString)
-                                                                                  .collect(Collectors.joining(", ")));
+        printf(getDepth(), "Requiring nested dependencies (%s)", nestedDependencies.stream()
+                                                                                   .map(Object::toString)
+                                                                                   .collect(Collectors.joining(", ")));
 
         for (final R d : nestedDependencies) {
             getActivated().addChildVertex(nameForDependency(d), null,
@@ -1181,8 +1187,8 @@ public class Resolution<R, S> {
      * @param state Dependency stat to push if it is not missing
      */
     private void handleMissingOrPushDependencyState(final DependencyState<R, S> state) {
-        if (state.getRequirement().isPresent() && state.getPossibilities().isEmpty()
-                && allowMissing(state.getRequirement().get())) {
+        final Optional<R> requirementOpt = state.getRequirement();
+        if (requirementOpt.isPresent() && state.getPossibilities().isEmpty() && allowMissing(requirementOpt.get())) {
             state.getActivated().detachVertexNamed(state.getName());
             pushStateForRequirements(new LinkedHashSet<>(state.getRequirements()), false, state.getActivated());
         } else {
@@ -1242,7 +1248,7 @@ public class Resolution<R, S> {
      *      sub-dependency version constraints.
      */
     private List<PossibilitySet<R, S>> groupPossibilities(final List<S> possibilities) {
-        @Nullable final List<PossibilitySet<R, S>> possibilitySets = new ArrayList<>();
+        final List<PossibilitySet<R, S>> possibilitySets = new ArrayList<>();
         PossibilitySet<R, S> currentPossibilitySet = null;
 
         for (int i = possibilities.size() - 1; i >= 0; i--) {

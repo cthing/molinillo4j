@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.cthing.molinillo.ConsoleUI;
+import org.cthing.molinillo.DebugUI;
 import org.cthing.molinillo.DependencyGraph;
 import org.cthing.molinillo.Resolver;
 import org.cthing.molinillo.graph.Vertex;
@@ -120,9 +120,9 @@ public final class TestCase {
             throw new IllegalStateException(ex);
         }
 
-        final ConsoleUI consoleUi = new ConsoleUI();
-        //consoleUi.setDebugMode(true);
-        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, consoleUi);
+        final DebugUI debugUi = new DebugUI();
+        //debugUi.setDebugMode(true);
+        final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, debugUi);
         return resolver.resolve(getRequested(), getBase());
     }
 

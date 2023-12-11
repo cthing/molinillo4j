@@ -1,7 +1,5 @@
 package org.cthing.molinillo;
 
-import java.io.PrintWriter;
-
 import javax.annotation.Nullable;
 
 
@@ -9,12 +7,6 @@ import javax.annotation.Nullable;
  * Classes which provides output from the resolution process to the user must implement this interface.
  */
 public interface UI {
-    /**
-     * Obtains the writer used to print output.
-     *
-     * @return Object to write output. Output is written to the standard output by default.
-     */
-    PrintWriter getOutput();
 
     /**
      * Called periodically according to {@link #getProgressRate()} to convey progress to the user. Does
@@ -40,13 +32,13 @@ public interface UI {
     void afterResolution();
 
     /**
-     * Writes debugging output.
+     * Writes output.
      *
      * @param depth Current depth of the resolution process
      * @param format Output string passed to {@link String#format(String, Object...)}
      * @param args Arguments for the output string passed to {@link String#format(String, Object...)}
      */
-    void debug(int depth, String format, Object... args);
+    void printf(int depth, String format, Object... args);
 
     /**
      * Indicates whether debug messages should be printed. If the {@code MOLINILLO_DEBUG} environment variable

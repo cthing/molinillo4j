@@ -10,7 +10,7 @@ import org.cthing.molinillo.DependencyGraph;
 
 
 /**
- * A log of command that are executed on the dependency graph and can be undone.
+ * A log of actions that are executed on the dependency graph and can be undone.
  *
  * @param <P> Payload type
  * @param <R> Requirement type
@@ -37,7 +37,6 @@ public class Log<P, R> implements Iterable<Action<P, R, ?>> {
      * Undoes the log to the specified tag.
      *
      * @param graph Dependency graph on which to undo the actions.
-     *
      * @param tagValue Value for the tag marking the point to which the graph should be undone.
      */
     public void rewindTo(final DependencyGraph<P, R> graph, final Object tagValue) {

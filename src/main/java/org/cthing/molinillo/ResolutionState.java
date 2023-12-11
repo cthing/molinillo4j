@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 
 
 /**
- * Base class for resolution states.
+ * Base class for all states.
  *
  * @param <R> Requirement type
  * @param <S> Specification type

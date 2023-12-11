@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.annotation.Nullable;
@@ -23,7 +24,7 @@ import org.cthing.molinillo.graph.Vertex;
 
 /**
  * Represents a directed graph of specifications as vertices and edges as the requirements of one package on another.
- * An example of a specification is a software package and a requirement can be a version constraints.
+ * An example of a specification is a software package and a requirement can be a version constraint on that package.
  *
  * @param <P> Payload type
  * @param <R> Requirement type
@@ -45,13 +46,14 @@ public class DependencyGraph<P, R> {
      *
      * @param log Action log to record changes to the graph
      */
+    @VisibilityForTesting
     public DependencyGraph(final Log<P, R> log) {
         this.log = log;
         this.vertices = new HashMap<>();
     }
 
     /**
-     * Obtains the vertices (i.e. dependencies) comprising the graph.
+     * Obtains the vertices comprising the graph.
      *
      * @return A map of the name of a vertex to the vertex.
      */
@@ -182,7 +184,9 @@ public class DependencyGraph<P, R> {
     }
 
     /**
-     * Clones this dependency graph and allows the payload type to be changed.
+     * Clones this dependency graph and allows the payload type to be changed. Note that edge requirements are
+     * shallow copied to the new graph. Whether a payload is shallow or deeply copied is at the discretion of the
+     * payload transform function.
      *
      * @param <U> Type for the new payload
      * @param payloadTransform Function to map from the original payload to the new payload
@@ -191,28 +195,30 @@ public class DependencyGraph<P, R> {
     public <U> DependencyGraph<U, R> cloneGraph(final Function<P, U> payloadTransform) {
         final DependencyGraph<U, R> graph = new DependencyGraph<>();
 
+        // Copy all vertices and transform the payload in the process.
         for (final Vertex<P, R> vertex : this.vertices.values()) {
             graph.addVertex(vertex.getName(), vertex.getPayload().map(payloadTransform).orElse(null), vertex.isRoot());
         }
 
+        final Consumer<Set<Edge<P, R>>> addEdges = edges -> {
+            for (final Edge<P, R> edge : edges) {
+                final Vertex<U, R> origin = graph.vertexNamed(edge.getOrigin().getName()).orElseThrow();
+                final Vertex<U, R> destination = graph.vertexNamed(edge.getDestination().getName()).orElseThrow();
+                graph.addEdgeNoCircular(origin, destination, edge.getRequirement());
+            }
+        };
+
+        // Copy all edges.
         for (final Vertex<P, R> vertex : this.vertices.values()) {
-            for (final Edge<P, R> edge : vertex.getIncomingEdges()) {
-                final Vertex<U, R> origin = graph.vertexNamed(edge.getOrigin().getName()).orElseThrow();
-                final Vertex<U, R> destination = graph.vertexNamed(edge.getDestination().getName()).orElseThrow();
-                graph.addEdgeNoCircular(origin, destination, edge.getRequirement());
-            }
-            for (final Edge<P, R> edge : vertex.getOutgoingEdges()) {
-                final Vertex<U, R> origin = graph.vertexNamed(edge.getOrigin().getName()).orElseThrow();
-                final Vertex<U, R> destination = graph.vertexNamed(edge.getDestination().getName()).orElseThrow();
-                graph.addEdgeNoCircular(origin, destination, edge.getRequirement());
-            }
+            addEdges.accept(vertex.getIncomingEdges());
+            addEdges.accept(vertex.getOutgoingEdges());
         }
 
         return graph;
     }
 
     /**
-     * Determines a path between the two specified vertices.
+     * Determines a minimum distance path between the two specified vertices.
      *
      * @param from Starting vertex for the path
      * @param to Ending vertex for the path
@@ -225,35 +231,36 @@ public class DependencyGraph<P, R> {
         final Map<String, Integer> distances = new HashMap<>();
         distances.put(from.getName(), 0);
 
+        // Find the minimum distance path.
         final int defaultDistance = this.vertices.size() + 1;
         final Map<Vertex<P, R>, Vertex<P, R>> predecessors = new HashMap<>();
-        this.vertices.values().forEach(vertex -> {
+        for (final Vertex<P, R> vertex : this.vertices.values()) {
             final int vertexDistance = distances.getOrDefault(vertex.getName(), defaultDistance) + 1;
-            vertex.successors().forEach(successor -> {
-                if (distances.getOrDefault(successor.getName(), defaultDistance) > vertexDistance) {
+            for (final Vertex<P, R> successor : vertex.successors()) {
+                if (vertexDistance < distances.getOrDefault(successor.getName(), defaultDistance)) {
                     distances.put(successor.getName(), vertexDistance);
                     predecessors.put(successor, vertex);
                 }
-            });
-        });
+            }
+        }
 
         final List<Vertex<P, R>> path = new ArrayList<>();
         Vertex<P, R> destination = to;
 
-        while (destination != null) {
+        // Construct the path back from the "to" vertex to the "from" vertex.
+        while (!destination.equals(from)) {
             path.add(destination);
-
-            if (destination.equals(from)) {
-                break;
-            }
-
             destination = predecessors.get(destination);
+
+            if (destination == null) {
+                throw new IllegalArgumentException("There is no path from " + from.getName() + " to " + to.getName());
+            }
         }
 
-        if (!path.get(path.size() - 1).equals(from)) {
-            throw new IllegalArgumentException("There is no path from " + from.getName() + " to " + to.getName());
-        }
+        // Add the starting vertex to complete the path
+        path.add(from);
 
+        // Reverse the path so that it goes "from" to "to".
         Collections.reverse(path);
         return path;
     }

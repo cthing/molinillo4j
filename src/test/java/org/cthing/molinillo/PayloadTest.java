@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 
 public class PayloadTest {
@@ -21,7 +21,7 @@ public class PayloadTest {
         assertThat(payload.isPossibilitySet()).isTrue();
         assertThat(payload.isSpecification()).isFalse();
         assertThat(payload.getPossibilitySet()).isEqualTo(possibilitySet);
-        assertThatIllegalStateException().isThrownBy(payload::getSpecification);
+        assertThatExceptionOfType(AssertionError.class).isThrownBy(payload::getSpecification);
         assertThat(payload).hasToString("PossibilitySet { possibilities=def }");
     }
 
@@ -32,7 +32,7 @@ public class PayloadTest {
         assertThat(payload.isPossibilitySet()).isFalse();
         assertThat(payload.isSpecification()).isTrue();
         assertThat(payload.getSpecification()).isEqualTo("abc");
-        assertThatIllegalStateException().isThrownBy(payload::getPossibilitySet);
+        assertThatExceptionOfType(AssertionError.class).isThrownBy(payload::getPossibilitySet);
         assertThat(payload).hasToString("abc");
     }
 

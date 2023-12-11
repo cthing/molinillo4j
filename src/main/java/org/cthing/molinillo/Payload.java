@@ -6,7 +6,8 @@ import javax.annotation.Nullable;
 
 
 /**
- * Represents the payload for a vertex or edge of the dependency graph.
+ * Represents the payload for a vertex of the dependency graph. This is a union type containing either a
+ * possibility set or a specification.
  *
  * @param <R> Requirement type
  * @param <S> Specification type
@@ -36,10 +37,7 @@ public class Payload<R, S> {
      * @throws IllegalStateException if the payload does not represent a possibility set
      */
     public PossibilitySet<R, S> getPossibilitySet() {
-        if (this.possibilitySet == null) {
-            throw new IllegalStateException("BUG: Payload is a specification but expected a PossibilitySet");
-        }
-
+        assert this.possibilitySet != null;
         return this.possibilitySet;
     }
 
@@ -50,10 +48,7 @@ public class Payload<R, S> {
      * @throws IllegalStateException if the payload does not represent a specification
      */
     public S getSpecification() {
-        if (this.specification == null) {
-            throw new IllegalStateException("BUG: Payload is a PossibilitySet but expected a specification");
-        }
-
+        assert this.specification != null;
         return this.specification;
     }
 

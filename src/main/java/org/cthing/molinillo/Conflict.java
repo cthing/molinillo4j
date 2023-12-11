@@ -12,8 +12,8 @@ import javax.annotation.Nullable;
 /**
  * A conflict encountered during the resolution process.
  *
- * @param <R>               Type for a requirement
- * @param <S>               Type for a specification
+ * @param <R> Type for a requirement
+ * @param <S> Type for a specification
  */
 public final class Conflict<R, S> {
 

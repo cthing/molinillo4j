@@ -6,7 +6,7 @@ import org.cthing.molinillo.DependencyGraph;
 
 
 /**
- * An action for marking a position in the command log. This allows the command log to be undone to a specified tag.
+ * An action for marking a position in the action log. This allows the action log to be undone to a specified tag.
  *
  * @param <P> Payload type
  * @param <R> Requirement type
@@ -16,23 +16,24 @@ public class Tag<P, R> extends Action<P, R, Void> {
     private final int value;
 
     /**
-     * Creates a tag for the specified object. If the object is a {@link String}, the string is treated as a symbolic
-     * constant. This means that two tags containing different string instance but with the same content, will be
-     * considered the same tag. Objects that are not strings are considered equal by identity. That is, two instances
-     * of the same class are not equal. In other words, it is the same as the default {@link Object#equals(Object)}
-     * method implementation.
+     * Creates a tag for the specified object. If the object is a {@link String}, it is treated as a symbolic
+     * constant. This means that two tags containing different string instances but with the same content, will be
+     * considered the same tag. Objects that are not strings are considered equal by identity. That is, two separate
+     * instances of the same class are not equal. In other words, objects are treated the same as the default
+     * {@link Object#equals(Object)} method implementation.
      *
-     * @param value Object represented by the tag.
+     * @param value Object representing the tag.
      */
     public Tag(final Object value) {
         this.value = (value instanceof String) ? value.hashCode() : System.identityHashCode(value);
     }
 
     /**
-     * Obtains a hash representing the specified value.
+     * Obtains a hash representing this tag's value.
      *
-     * @return Hash representing the value. For strings this is the result of {@link String#hashCode()}. For other
-     *      objects this is the result of {@link System#identityHashCode(Object)}.
+     * @return Hash representing the tag's value. For strings, this is the result of calling {@link String#hashCode()}
+     *      on the string. For other objects, this is the result of calling {@link System#identityHashCode(Object)} on
+     *      that object.
      */
     public int getValue() {
         return this.value;

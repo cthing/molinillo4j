@@ -7,20 +7,17 @@ import javax.annotation.Nullable;
 
 
 /**
- * Provides output from the resolution process to the user using the console.
+ * Provides debugging output to the console during the dependency resolution process. Debug output can be enabled
+ * either by calling {@code setDebugMode(true)} or setting the {@code MOLINILLO_DEBUG} environment variable to any
+ * value.
  */
-public class ConsoleUI implements UI {
+public class DebugUI implements UI {
 
     private static final PrintWriter WRITER = new PrintWriter(System.out, true, StandardCharsets.UTF_8);
     private static final int PROGRESS_RATE = 333;   // Progress output frequency in milliseconds
 
     @Nullable
     private Boolean debugMode;
-
-    @Override
-    public PrintWriter getOutput() {
-        return WRITER;
-    }
 
     @Override
     public void indicateProgress() {
@@ -49,7 +46,7 @@ public class ConsoleUI implements UI {
     }
 
     @Override
-    public void debug(final int depth, final String format, final Object... args) {
+    public void printf(final int depth, final String format, final Object... args) {
         if (isDebugMode()) {
             WRITER.println(String.format(":%4d: ", depth) + String.format(format, args));
         }

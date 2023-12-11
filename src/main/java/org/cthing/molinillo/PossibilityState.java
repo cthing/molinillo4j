@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 
 
 /**
- * A state encapsulating a single possibility to fulfill the given requirement.
+ * A state encapsulating a single possibility.
  *
  * @param <R> Requirement type
  * @param <S> Specification type
