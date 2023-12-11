@@ -1,5 +1,7 @@
 # ![C Thing Software](https://www.cthing.com/branding/CThingSoftware-57x60.png "C Thing Software") molinillo4j
 
+[![CI](https://github.com/cthing/molinillo4j/actions/workflows/ci.yml/badge.svg)](https://github.com/cthing/molinillo4j/actions/workflows/ci.yml)
+
 A port of the [Molinillo](https://github.com/CocoaPods/Molinillo/) generic dependency resolution algorithm to Java.
 
 ### Usage
@@ -33,7 +35,7 @@ Perform the following steps to use the dependency solver.
    ```
 
 ### Additional Information
-The Molinillo repository contains a detailed
+The Molinillo project contains a detailed
 [architecture document](https://github.com/CocoaPods/Molinillo/blob/master/ARCHITECTURE.md) that explains the algorithm.
 
 ### Glossary
