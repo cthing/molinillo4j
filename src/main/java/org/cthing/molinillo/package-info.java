@@ -4,4 +4,4 @@
 @PackageNonnullByDefault
 package org.cthing.molinillo;
 
-import org.cthing.molinillo.annotations.PackageNonnullByDefault;
+import org.cthing.annotations.PackageNonnullByDefault;

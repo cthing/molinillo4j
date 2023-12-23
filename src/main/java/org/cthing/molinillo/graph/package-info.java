@@ -4,4 +4,4 @@
 @PackageNonnullByDefault
 package org.cthing.molinillo.graph;
 
-import org.cthing.molinillo.annotations.PackageNonnullByDefault;
+import org.cthing.annotations.PackageNonnullByDefault;

@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
-import org.cthing.molinillo.annotations.VisibilityForTesting;
+import org.cthing.annotations.AccessForTesting;
 import org.cthing.molinillo.errors.CircularDependencyError;
 import org.cthing.molinillo.graph.Edge;
 import org.cthing.molinillo.graph.Log;
@@ -46,7 +46,7 @@ public class DependencyGraph<P, R> {
      *
      * @param log Action log to record changes to the graph
      */
-    @VisibilityForTesting
+    @AccessForTesting
     public DependencyGraph(final Log<P, R> log) {
         this.log = log;
         this.vertices = new HashMap<>();
@@ -226,7 +226,7 @@ public class DependencyGraph<P, R> {
      *      are included in the path
      * @throws IllegalArgumentException if no path exists between the specified vertices
      */
-    @VisibilityForTesting
+    @AccessForTesting
     List<Vertex<P, R>> path(final Vertex<P, R> from, final Vertex<P, R> to) {
         final Map<String, Integer> distances = new HashMap<>();
         distances.put(from.getName(), 0);
