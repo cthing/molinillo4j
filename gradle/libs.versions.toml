@@ -15,6 +15,7 @@ versions = { id = "com.github.ben-manes.versions", version = "0.51.0" }
 [libraries]
 assertJ = "org.assertj:assertj-core:3.25.3"
 cthingAnnots = "org.cthing:cthing-annotations:1.0.0"
+cthingProjectVersion = "org.cthing:cthing-projectversion:1.0.0"
 equalsVerifier = "nl.jqno.equalsverifier:equalsverifier:3.15.6"
 jacksonAnnots = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
 jacksonCore = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
