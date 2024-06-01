@@ -75,7 +75,7 @@ public class ResolverTest {
                                 assertThat(result).isEqualTo(testCase.getResult());
                             } else {
                                 final Throwable throwable =
-                                        catchThrowableOfType(() -> testCase.resolve(indexClass), ResolverError.class);
+                                        catchThrowableOfType(ResolverError.class, () -> testCase.resolve(indexClass));
                                 if (throwable instanceof final CircularDependencyError error) {
                                     final List<Payload<TestDependency, TestSpecification>> payloads = error.getPayloads();
                                     final Set<String> deps =
@@ -105,7 +105,7 @@ public class ResolverTest {
         final TestDependency dep = new TestDependency("missing", "3.0");
         final Resolver<TestDependency, TestSpecification> resolver = new Resolver<>(testIndex, new DebugUI());
         final VersionConflictError versionConflictError =
-                catchThrowableOfType(() -> resolver.resolve(Set.of(dep)), VersionConflictError.class);
+                catchThrowableOfType(VersionConflictError.class, () -> resolver.resolve(Set.of(dep)));
         assertThat(versionConflictError.getMessage()).isEqualTo("""
                              Unable to satisfy the following requirements:
 
@@ -125,8 +125,8 @@ public class ResolverTest {
                         .filter(tc -> "yields conflicts if a child dependency is not resolved".equals(tc.getName()))
                         .findFirst()
                         .orElseThrow();
-        final VersionConflictError versionConflictError = catchThrowableOfType(() -> testCase.resolve(TestIndex.class),
-                                                                               VersionConflictError.class);
+        final VersionConflictError versionConflictError = catchThrowableOfType(VersionConflictError.class,
+                                                                               () -> testCase.resolve(TestIndex.class));
         assertThat(versionConflictError.getMessage()).isEqualTo("""
                              Unable to satisfy the following requirements:
 
