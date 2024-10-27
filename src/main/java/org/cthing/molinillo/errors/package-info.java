@@ -1,7 +1,7 @@
 /**
  * Errors reported by the resolver.
  */
-@PackageNonnullByDefault
+@NullMarked
 package org.cthing.molinillo.errors;
 
-import org.cthing.annotations.PackageNonnullByDefault;
+import org.jspecify.annotations.NullMarked;

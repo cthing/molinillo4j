@@ -14,12 +14,13 @@ import org.cthing.molinillo.DependencyGraph;
 import org.cthing.molinillo.Payload;
 import org.cthing.molinillo.graph.Vertex;
 import org.cthing.versionparser.Version;
+import org.jspecify.annotations.Nullable;
 
 
 @SuppressWarnings("MethodDoesntCallSuperMethod")
 public class CocoaPodsTestIndex extends TestIndex {
 
-    private record PossibleVersions(List<Version> existingVersions, boolean prereleaseRequirement) {
+    private record PossibleVersions(List<@Nullable Version> existingVersions, boolean prereleaseRequirement) {
     }
 
     public CocoaPodsTestIndex(final Map<String, TestSpecification[]> specsByName) {
@@ -69,7 +70,7 @@ public class CocoaPodsTestIndex extends TestIndex {
                                                             final DependencyGraph<Payload<TestDependency, TestSpecification>,
                                                                     TestDependency> activated) {
         boolean prereleaseRequirement = dependency.isPreRelease();
-        List<Version> existingVersions = new ArrayList<>();
+        List<@Nullable Version> existingVersions = new ArrayList<>();
         for (final Vertex<Payload<TestDependency, TestSpecification>, TestDependency> vertex : activated.getVertices().values()) {
             final Optional<Payload<TestDependency, TestSpecification>> payloadOpt = vertex.getPayload();
             if (payloadOpt.isEmpty()) {

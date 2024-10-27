@@ -1,6 +1,8 @@
 package org.cthing.molinillo.errors;
 
 import java.io.Serial;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -38,7 +40,7 @@ public class NoSuchDependencyError extends ResolverError {
      */
     public NoSuchDependencyError(final Object dependency, final Set<Object> requiredBy) {
         this.dependency = dependency;
-        this.requiredBy = requiredBy;
+        this.requiredBy = new HashSet<>(requiredBy);
     }
 
     /**
@@ -60,7 +62,27 @@ public class NoSuchDependencyError extends ResolverError {
      */
     @SuppressWarnings("unchecked")
     public <R> Set<R> getRequiredBy() {
-        return (Set<R>)this.requiredBy;
+        return (Set<R>)Collections.unmodifiableSet(this.requiredBy);
+    }
+
+    /**
+     * Adds a dependent of the dependency that could not be found.
+     *
+     * @param <R> Dependency type
+     * @param reqBy Dependent that could not be found
+     */
+    public <R> void addRequiredBy(final R reqBy) {
+        this.requiredBy.add(reqBy);
+    }
+
+    /**
+     * Adds dependents of the dependency that could not be found.
+     *
+     * @param <R> Dependency type
+     * @param reqBy Dependents that could not be found
+     */
+    public <R> void addRequiredBy(final Set<R> reqBy) {
+        this.requiredBy.addAll(reqBy);
     }
 
     @Override

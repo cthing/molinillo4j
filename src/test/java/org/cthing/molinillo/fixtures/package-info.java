@@ -1,7 +1,7 @@
 /**
  * Classes used in unit tests.
  */
-@PackageNonnullByDefault
+@NullMarked
 package org.cthing.molinillo.fixtures;
 
-import org.cthing.annotations.PackageNonnullByDefault;
+import org.jspecify.annotations.NullMarked;

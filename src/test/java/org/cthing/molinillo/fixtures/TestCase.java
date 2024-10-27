@@ -11,8 +11,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import org.cthing.molinillo.DebugUI;
 import org.cthing.molinillo.DependencyGraph;
 import org.cthing.molinillo.Resolver;
@@ -20,6 +18,7 @@ import org.cthing.molinillo.graph.Vertex;
 import org.cthing.versionparser.Version;
 import org.cthing.versionparser.VersionParsingException;
 import org.cthing.versionparser.gem.GemVersionScheme;
+import org.jspecify.annotations.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;

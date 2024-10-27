@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -33,7 +33,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
     private int reversedTreeIndex = -1;
 
     @Nullable
-    private List<R> requirementsToAvoid;
+    private List<@Nullable R> requirementsToAvoid;
 
     @Nullable
     private Set<R> allRequirements;
@@ -155,7 +155,7 @@ public class UnwindDetails<R, S> implements Comparable<UnwindDetails<R, S>> {
      *
      * @return Sub-dependencies to avoid when choosing a new possibility.
      */
-    public List<R> subDependenciesToAvoid() {
+    public List<@Nullable R> subDependenciesToAvoid() {
         if (this.requirementsToAvoid == null) {
             this.requirementsToAvoid = new ArrayList<>();
             for (final List<R> tree : this.requirementTrees) {

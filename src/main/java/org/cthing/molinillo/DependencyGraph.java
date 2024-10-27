@@ -13,13 +13,12 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import javax.annotation.Nullable;
-
 import org.cthing.annotations.AccessForTesting;
 import org.cthing.molinillo.errors.CircularDependencyError;
 import org.cthing.molinillo.graph.Edge;
 import org.cthing.molinillo.graph.Log;
 import org.cthing.molinillo.graph.Vertex;
+import org.jspecify.annotations.Nullable;
 
 
 /**

@@ -22,7 +22,6 @@ public class TagTest {
     }
 
     @Test
-    @SuppressWarnings("EqualsWithItself")
     public void testEquality() {
         EqualsVerifier.forClass(Tag.class)
                       .usingGetClass()

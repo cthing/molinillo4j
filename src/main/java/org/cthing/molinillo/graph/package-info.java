@@ -1,7 +1,7 @@
 /**
  * Dependency graph classes.
  */
-@PackageNonnullByDefault
+@NullMarked
 package org.cthing.molinillo.graph;
 
-import org.cthing.annotations.PackageNonnullByDefault;
+import org.jspecify.annotations.NullMarked;

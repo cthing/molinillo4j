@@ -9,11 +9,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-
 import org.cthing.molinillo.Conflict;
 import org.cthing.molinillo.Resolution;
 import org.cthing.molinillo.SpecificationProvider;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -240,7 +239,7 @@ public class VersionConflictError extends ResolverError {
                                 final SpecificationProvider<R, S> specificationProvider) {
         super("Unable to satisfy the following requirements:\n\n" + buildErrorMessage(conflicts));
 
-        this.conflicts = (Map)conflicts;
+        this.conflicts = Map.copyOf(conflicts);
         this.specificationProvider = specificationProvider;
     }
 

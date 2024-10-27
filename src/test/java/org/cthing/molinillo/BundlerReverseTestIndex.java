@@ -16,7 +16,6 @@ public class BundlerReverseTestIndex extends BundlerTestIndex {
     }
 
     @Override
-    @SuppressWarnings("MethodDoesntCallSuperMethod")
     public List<TestDependency> sortDependencies(final List<TestDependency> dependencies,
                                                  final DependencyGraph<Payload<TestDependency, TestSpecification>,
                                                          TestDependency> activated,

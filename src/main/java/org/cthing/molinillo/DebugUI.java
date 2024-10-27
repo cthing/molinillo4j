@@ -3,7 +3,7 @@ package org.cthing.molinillo;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -46,7 +46,7 @@ public class DebugUI implements UI {
     }
 
     @Override
-    public void printf(final int depth, final String format, final Object... args) {
+    public void printf(final int depth, final String format, final @Nullable Object... args) {
         if (isDebugMode()) {
             WRITER.println(String.format(":%4d: ", depth) + String.format(format, args));
         }

@@ -28,7 +28,7 @@ plugins {
     alias(libs.plugins.versions)
 }
 
-version = ProjectVersion("0.1.0", BuildType.snapshot)
+version = ProjectVersion("0.2.0", BuildType.snapshot)
 group = "org.cthing"
 description = "A port of the Molinillo generic dependency resolution algorithm to Java."
 
@@ -39,9 +39,9 @@ java {
 }
 
 dependencies {
-    api(libs.jsr305)
+    api(libs.jspecify)
 
-    implementation(libs.cthingAnnots)
+    compileOnly(libs.cthingAnnots)
 
     testImplementation(libs.assertJ)
     testImplementation(libs.equalsVerifier)

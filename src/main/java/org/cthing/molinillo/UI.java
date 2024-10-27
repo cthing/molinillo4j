@@ -1,6 +1,7 @@
 package org.cthing.molinillo;
 
-import javax.annotation.Nullable;
+
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -38,7 +39,7 @@ public interface UI {
      * @param format Output string passed to {@link String#format(String, Object...)}
      * @param args Arguments for the output string passed to {@link String#format(String, Object...)}
      */
-    void printf(int depth, String format, Object... args);
+    void printf(int depth, String format, @Nullable Object... args);
 
     /**
      * Indicates whether debug messages should be printed. If the {@code MOLINILLO_DEBUG} environment variable

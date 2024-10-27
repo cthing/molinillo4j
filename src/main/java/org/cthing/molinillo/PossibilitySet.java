@@ -59,7 +59,7 @@ public final class PossibilitySet<R, S> {
     public Optional<S> getLatestVersion() {
         return this.possibilities.isEmpty()
                ? Optional.empty()
-               : Optional.ofNullable(this.possibilities.get(this.possibilities.size() - 1));
+               : Optional.of(this.possibilities.get(this.possibilities.size() - 1));
     }
 
     @Override

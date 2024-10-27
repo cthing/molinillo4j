@@ -2,7 +2,7 @@ package org.cthing.molinillo;
 
 import java.util.Objects;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 
 /**

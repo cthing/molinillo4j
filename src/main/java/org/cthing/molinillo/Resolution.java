@@ -17,14 +17,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.annotation.Nullable;
-
 import org.cthing.molinillo.errors.CircularDependencyError;
 import org.cthing.molinillo.errors.NoSuchDependencyError;
 import org.cthing.molinillo.errors.ResolverError;
 import org.cthing.molinillo.errors.VersionConflictError;
 import org.cthing.molinillo.graph.Edge;
 import org.cthing.molinillo.graph.Vertex;
+import org.jspecify.annotations.Nullable;
 
 
 /**
@@ -47,7 +46,7 @@ public class Resolution<R, S> {
     private int iterationRate;
     private int iterationCount;
     private long startedAt;
-    private final List<ResolutionState<R, S>> states;
+    private final List<@Nullable ResolutionState<R, S>> states;
 
     private final Map<R, List<Integer>> parentsOf;
 
@@ -64,7 +63,7 @@ public class Resolution<R, S> {
         this.specificationProvider = specificationProvider;
         this.resolverUi = resolverUi;
         this.base = base;
-        this.originalRequested = originalRequested;
+        this.originalRequested = new HashSet<>(originalRequested);
 
         this.states = new ArrayList<>();
         this.parentsOf = new HashMap<>();
@@ -308,12 +307,12 @@ public class Resolution<R, S> {
     private NoSuchDependencyError processNoSuchDependencyError(final NoSuchDependencyError error) {
         if (getState().isPresent()) {
             getActivated().vertexNamed(nameForDependency(error.getDependency())).ifPresent(vertex -> {
-                error.getRequiredBy().addAll(vertex.getIncomingEdges()
-                                                   .stream()
-                                                   .map(e -> e.getOrigin().getName())
-                                                   .toList());
+                error.addRequiredBy(vertex.getIncomingEdges()
+                                          .stream()
+                                          .map(e -> e.getOrigin().getName())
+                                          .toList());
                 if (!vertex.getExplicitRequirements().isEmpty()) {
-                    error.getRequiredBy().add(nameForExplicitDependencySource());
+                    error.addRequiredBy(nameForExplicitDependencySource());
                 }
             });
         }
@@ -391,7 +390,7 @@ public class Resolution<R, S> {
      */
     private void processTopmostState() {
         try {
-            final List<PossibilitySet<R, S>> possibilities = getPossibilities();
+            final List<@Nullable PossibilitySet<R, S>> possibilities = getPossibilities();
             if (!possibilities.isEmpty() && possibilities.get(possibilities.size() - 1) != null) {
                 attemptToActivate();
             } else {
@@ -449,18 +448,15 @@ public class Resolution<R, S> {
                detailsForUnwind.getStateIndex() / 2);
 
         final Map<String, Conflict<R, S>> conflicts = getConflicts();
-        final List<ResolutionState<R, S>> statesToSlice = this.states.subList(detailsForUnwind.getStateIndex() + 1,
-                                                                              this.states.size());
-        final List<ResolutionState<R, S>> slicedStates = new ArrayList<>(statesToSlice);
+        final List<@Nullable ResolutionState<R, S>> statesToSlice =
+                this.states.subList(detailsForUnwind.getStateIndex() + 1, this.states.size());
+        final List<@Nullable ResolutionState<R, S>> slicedStates = new ArrayList<>(statesToSlice);
         statesToSlice.clear();
         raiseErrorUnlessState(conflicts);
 
         if (!slicedStates.isEmpty()) {
-            if (slicedStates.get(0) == null) {
-                getActivated().rewindTo(INITIAL_STATE);
-            } else {
-                getActivated().rewindTo(slicedStates.get(0));
-            }
+            final ResolutionState<R, S> state = slicedStates.get(0);
+            getActivated().rewindTo(Objects.requireNonNullElse(state, INITIAL_STATE));
         }
 
         final ResolutionState<R, S> state = getState().orElseThrow();
@@ -540,13 +536,17 @@ public class Resolution<R, S> {
 
         // Update the "requirementUnwoundToInstead" on any relevant unused unwinds.
         for (final UnwindDetails<R, S> d : relevantUnusedUnwinds) {
-            @Nullable final R req = lastDetailForCurrentUnwind.getStateRequirement();
-            d.getRequirementsUnwoundToInstead().add(req);
+            final R req = lastDetailForCurrentUnwind.getStateRequirement();
+            if (req != null) {
+                d.getRequirementsUnwoundToInstead().add(req);
+            }
         }
 
         for (final UnwindDetails<R, S> d : unwindDetails) {
-            @Nullable final R req = lastDetailForCurrentUnwind.getStateRequirement();
-            d.getRequirementsUnwoundToInstead().add(req);
+            final R req = lastDetailForCurrentUnwind.getStateRequirement();
+            if (req != null) {
+                d.getRequirementsUnwoundToInstead().add(req);
+            }
         }
 
         return lastDetailForCurrentUnwind;
@@ -583,7 +583,7 @@ public class Resolution<R, S> {
 
             // Next, look at the parent of this requirement, and check if the requirement could have been avoided
             // if an alternative PossibilitySet had been chosen
-            @Nullable R parentR = parentOf(r);
+            R parentR = parentOf(r);
             if (parentR != null) {
                 partialTree.add(0, parentR);
                 requirementState = findStateFor(parentR).orElseThrow();
@@ -595,7 +595,7 @@ public class Resolution<R, S> {
 
                 // Finally, look at the grandparent and up of this requirement, looking for any possibilities that
                 // wouldn't create their parent requirement
-                @Nullable R grandparentR = parentOf(parentR);
+                R grandparentR = parentOf(parentR);
                 while (grandparentR != null) {
                     partialTree.add(0, grandparentR);
                     requirementState = findStateFor(grandparentR).orElseThrow();
@@ -723,7 +723,7 @@ public class Resolution<R, S> {
                               )
                               .toList();
 
-        final List<R> requirementsToAvoid = parentUnwinds.stream()
+        final List<@Nullable R> requirementsToAvoid = parentUnwinds.stream()
                                                          .flatMap(uw -> uw.subDependenciesToAvoid().stream())
                                                          .toList();
 
@@ -877,7 +877,7 @@ public class Resolution<R, S> {
         }
 
         return this.states.stream()
-                          .filter(state -> state.getName().equals(name))
+                          .filter(state -> state != null && state.getName().equals(name))
                           .findFirst()
                           .flatMap(ResolutionState::getRequirement);
 
@@ -896,7 +896,7 @@ public class Resolution<R, S> {
         }
 
         return this.states.stream()
-                          .filter(state -> requirement.equals(state.getRequirement().orElse(null)))
+                          .filter(state -> state != null && requirement.equals(state.getRequirement().orElse(null)))
                           .findFirst();
     }
 
@@ -938,18 +938,18 @@ public class Resolution<R, S> {
 
         final Map<String, S> activatedByName = new HashMap<>();
         for (final Vertex<Payload<R, S>, R> v : getActivated().getVertices().values()) {
-            if (v.getPayload().isPresent()) {
+            if (v.getPayload().isPresent() && v.getPayload().get().getPossibilitySet().getLatestVersion().isPresent()) {
                 activatedByName.put(v.getName(),
-                                    v.getPayload().get().getPossibilitySet().getLatestVersion().orElse(null));
+                                    v.getPayload().get().getPossibilitySet().getLatestVersion().get());
             }
         }
 
         final R requirement = getRequirement().orElseThrow();
         final Optional<S> existingSpecification =
                 vertex.getPayload().flatMap(payload -> payload.getPossibilitySet().getLatestVersion());
-        @Nullable final PossibilitySet<R, S> possibilitySet = getPossibilities().isEmpty()
-                                                              ? null
-                                                              : getPossibilities().get(getPossibilities().size() - 1);
+        final PossibilitySet<R, S> possibilitySet = getPossibilities().isEmpty()
+                                                    ? null
+                                                    : getPossibilities().get(getPossibilities().size() - 1);
         final Conflict<R, S> conflict = new Conflict<>(requirement,
                                                        requirements,
                                                        existingSpecification.orElse(null),
@@ -984,7 +984,7 @@ public class Resolution<R, S> {
     private List<R> requirementTreeFor(final R requirement) {
         final List<R> tree = new ArrayList<>();
 
-        for (@Nullable R req = requirement; req != null; req = parentOf(req)) {
+        for (R req = requirement; req != null; req = parentOf(req)) {
             tree.add(0, req);
         }
 
@@ -1019,7 +1019,7 @@ public class Resolution<R, S> {
      * @param format Output string passed to {@link String#format(String, Object...)}
      * @param args Arguments for the output string passed to {@link String#format(String, Object...)}
      */
-    private void printf(final int depth, final String format, final Object... args) {
+    private void printf(final int depth, final String format, final @Nullable Object... args) {
         this.resolverUi.printf(depth, format, args);
     }
 
@@ -1159,10 +1159,11 @@ public class Resolution<R, S> {
 
         final Function<R, Boolean> isRequirementUnique =
                 requirement -> this.states.stream()
+                                          .filter(Objects::nonNull)
                                           .noneMatch(state -> Objects.equals(state.getRequirement().orElse(null),
                                                                              requirement));
 
-        @Nullable R newRequirement;
+        R newRequirement;
         do {
             newRequirement = sortedRequirements.isEmpty() ? null : sortedRequirements.remove(0);
         } while (newRequirement != null && !isRequirementUnique.apply(newRequirement));
