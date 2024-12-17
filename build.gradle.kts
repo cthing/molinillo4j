@@ -192,7 +192,7 @@ publishing {
                 url = "https://github.com/cthing/${project.name}"
                 licenses {
                     license {
-                        name = "MIT License"
+                        name = "MIT"
                         url = "https://opensource.org/license/mit/"
                     }
                 }
