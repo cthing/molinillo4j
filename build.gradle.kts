@@ -1,5 +1,6 @@
 import com.github.spotbugs.snom.Confidence
 import com.github.spotbugs.snom.Effort
+import org.cthing.gradle.plugins.publishing.PomLicense
 import org.cthing.projectversion.BuildType
 import org.cthing.projectversion.ProjectVersion
 import java.text.SimpleDateFormat
@@ -22,6 +23,7 @@ plugins {
     jacoco
     `maven-publish`
     signing
+    alias(libs.plugins.cthingPublishing)
     alias(libs.plugins.cthingVersioning)
     alias(libs.plugins.dependencyAnalysis)
     alias(libs.plugins.spotbugs)
@@ -186,55 +188,28 @@ publishing {
             artifact(sourceJar)
             artifact(javadocJar)
 
-            pom {
-                name = project.name
-                description = project.description
-                url = "https://github.com/cthing/${project.name}"
-                licenses {
-                    license {
-                        name = "MIT"
-                        url = "https://opensource.org/license/mit/"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "baron"
-                        name = "Baron Roberts"
-                        email = "baron@cthing.com"
-                        organization = "C Thing Software"
-                        organizationUrl = "https://www.cthing.com"
-                    }
-                }
-                scm {
-                    connection = "scm:git:https://github.com/cthing/${project.name}.git"
-                    developerConnection = "scm:git:git@github.com:cthing/${project.name}.git"
-                    url = "https://github.com/cthing/${project.name}"
-                }
-                issueManagement {
-                    system = "GitHub Issues"
-                    url = "https://github.com/cthing/${project.name}/issues"
-                }
-            }
+            val pomAction = cthingPublishing.createPomAction()
+            pomAction.license = PomLicense.MIT
+            pom(pomAction)
         }
     }
 
-    val repoUrl = if ((version as ProjectVersion).isSnapshotBuild)
-        findProperty("cthing.nexus.snapshotsUrl") else findProperty("cthing.nexus.candidatesUrl")
+    val repoUrl = cthingRepo.repoUrl
     if (repoUrl != null) {
         repositories {
             maven {
                 name = "CThingMaven"
                 setUrl(repoUrl)
                 credentials {
-                    username = property("cthing.nexus.user") as String
-                    password = property("cthing.nexus.password") as String
+                    username = cthingRepo.user
+                    password = cthingRepo.password
                 }
             }
         }
     }
 }
 
-if (hasProperty("signing.keyId") && hasProperty("signing.password") && hasProperty("signing.secretKeyRingFile")) {
+if (cthingPublishing.canSign()) {
     signing {
         sign(publishing.publications["jar"])
     }
