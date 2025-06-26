@@ -44,7 +44,7 @@ public final class TestCase {
         this.index = TestIndex.fromFixture(indexName);
 
         this.requested = new LinkedHashSet<>();
-        rootNode.get("requested").fields().forEachRemaining(entry -> {
+        rootNode.get("requested").properties().forEach(entry -> {
             final String requestedName = entry.getKey().replaceAll("\01", "");
             final String[] requestedConstraints = entry.getValue().asText().split("\\s*,\\s*");
             final TestDependency dependency = new TestDependency(requestedName, requestedConstraints);
